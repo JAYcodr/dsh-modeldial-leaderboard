@@ -347,7 +347,7 @@ window.__ModuleLoader__.load({
       }
       .mdlb-kpi .mdlb-kpi-l {
         margin-top: 8px; font-size: 10px; letter-spacing: .15em;
-        text-transform: uppercase; color: var(--mdlb-ink3);
+        text-transform: uppercase; color: var(--mdlb-ink2);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
 
@@ -874,9 +874,13 @@ window.__ModuleLoader__.load({
         .mdlb-lede b { font-size: 40px; }
         .mdlb-lede em { font-size: 14px; }
         .mdlb-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .mdlb-kpi:nth-child(2n) { border-right: 0; }
-        .mdlb-kpi:nth-child(n+3) { border-top: 1px solid var(--mdlb-rule); }
-        .mdlb-kpi:nth-child(3) { padding-left: 0; }
+        .mdlb-kpi { padding: 12px 0 11px; }
+        .mdlb-kpi + .mdlb-kpi { padding-left: 14px; }
+        .mdlb-kpi .mdlb-kpi-n { font-size: 34px; }
+        .mdlb-kpi .mdlb-kpi-l {
+          margin-top: 7px; font-size: 9px; letter-spacing: .1em;
+          white-space: normal; overflow: visible; line-height: 1.35;
+        }
         /* 窄面板里大字报会吃掉首屏，改成前三名单行紧凑条，第 4~6 名藏在完整榜单里 */
         .mdlb-podium { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .mdlb-pod { padding: 9px 10px 10px 0; border-top: 0 !important; }
