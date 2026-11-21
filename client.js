@@ -725,7 +725,7 @@ window.__ModuleLoader__.load({
       .mdlb-field {
         display: inline-flex; align-items: center; gap: 6px;
         min-width: 0;
-        font-size: 11px; color: var(--mdlb-ink3); white-space: nowrap;
+        font-size: 11px; color: var(--mdlb-ink2); white-space: nowrap;
         letter-spacing: .04em;
       }
       .mdlb-field + .mdlb-field { margin-left: 12px; }
@@ -772,7 +772,7 @@ window.__ModuleLoader__.load({
         letter-spacing: .02em;
       }
       .mdlb-plan-cell { display: flex; flex-direction: column; gap: 1px; min-width: 170px; }
-      .mdlb-plan-meta { color: var(--mdlb-ink3); font-size: 10.5px; }
+      .mdlb-plan-meta { color: var(--mdlb-ink2); font-size: 10.5px; }
 
       /* 汇总行：编号章节同款的分隔，不用色块 */
       .mdlb-summary {
