@@ -330,18 +330,18 @@ window.__ModuleLoader__.load({
 
       /* ---------- 半调网点：流动的纸，指针处被橡皮擦掉 ---------- */
       .mdlb-paper {
-        /* absolute + height 略大于标题带：纸跟着内容一起滚走，不是钉在视口上。
+        /* absolute + 带高：纸跟着内容一起滚走，不是钉在视口上。
            原来是 sticky + 100vh，滚到哪底下都有网点，表格区被铺满 —— 用户要的是
-           「波点只在顶部那一带」。改成 absolute 后 root 是滚动容器，纸随内容滚动。
-           margin-left 吃掉 root 左右 padding（右缘那 32px 否则是纯白）；
-           right: 0 补右侧宽度，因为 absolute + 负左边距会让宽度少 32px */
+           「波点只在顶部那一带」。root 是滚动容器，absolute 子元素随内容滚，
+           滚下去纸出视野，剩下的就是干净的表格区。
+           左右各吃掉 root 的 32px padding，否则两边各留一条纯白。 */
         position: absolute;
         top: 0;
         left: calc(var(--mdlb-pad-x) * -1);
         right: calc(var(--mdlb-pad-x) * -1);
         flex: none;            /* 父级是 flex 列，不写这行它会被压成 0 高 */
-        /* 高度按标题带算：刊头 151（560 时 136）+ 页签 + KPI 一路到「第 4 名之后」
-           那条小节线，再留 24px 余量，圆点和渐变在表格首行之前就收干净 */
+        /* 高度＝刊头（151／窄屏 136）+ 页签 + KPI + 一行小节标签，到表格之前收住。
+           下缘不硬切，靠 mask 的纵向渐隐过渡掉（见下面的第 ③ 条） */
         height: var(--mdlb-band-h);
         pointer-events: none;
         z-index: 0;
