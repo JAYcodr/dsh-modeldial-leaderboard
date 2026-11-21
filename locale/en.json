@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Modeldial board",
+    "description": "Opens the Modeldial coding leaderboard and subscription quota data from the sidebar: overall and per-axis scores for 54 models, and each plan's weekly quota, with a manual refresh.",
+    "detail": "docs/DETAIL.md"
+  }
+}

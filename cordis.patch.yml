@@ -1,0 +1,3 @@
+- insert:
+    - id: modeldial-leaderboard
+      name: '@local/modeldial-leaderboard'
