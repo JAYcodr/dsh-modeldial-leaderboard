@@ -285,6 +285,11 @@ window.__ModuleLoader__.load({
         /* 指针不在面板上时把洞推到画布外，等于「没有洞」 */
         --mdlb-mx: -9999px;
         --mdlb-my: -9999px;
+        /* 网点纸的高度＝标题带高度：刊头 151 + 页签 30 + KPI 98 + 余量，
+           再往下就该是干净的表格区。窄面板字号小一档，整条带也矮一些 */
+        --mdlb-band-h: 360px;
+        /* absolute 的纸要以这一层为定位基准，才能跟着内容一起滚 */
+        position: relative;
 
         display: flex;
         flex-direction: column;
@@ -325,17 +330,19 @@ window.__ModuleLoader__.load({
 
       /* ---------- 半调网点：流动的纸，指针处被橡皮擦掉 ---------- */
       .mdlb-paper {
-        /* sticky 而不是 absolute：整页滚动下 absolute 会跟着内容滚走，
-           纸应该钉在视口上，只有内容在纸上移动 */
-        position: sticky;
+        /* absolute + height 略大于标题带：纸跟着内容一起滚走，不是钉在视口上。
+           原来是 sticky + 100vh，滚到哪底下都有网点，表格区被铺满 —— 用户要的是
+           「波点只在顶部那一带」。改成 absolute 后 root 是滚动容器，纸随内容滚动。
+           margin-left 吃掉 root 左右 padding（右缘那 32px 否则是纯白）；
+           right: 0 补右侧宽度，因为 absolute + 负左边距会让宽度少 32px */
+        position: absolute;
         top: 0;
-        left: 0;
+        left: calc(var(--mdlb-pad-x) * -1);
+        right: calc(var(--mdlb-pad-x) * -1);
         flex: none;            /* 父级是 flex 列，不写这行它会被压成 0 高 */
-        height: 100vh;
-        margin-bottom: -100vh; /* 不占版面：铺满视口，但不把内容推下去 */
-        /* 横向吃进 root 的左右 padding：否则最右侧 32px 会是一条纯白，
-           而那里恰好是渐变最浓的地方。root 有 overflow-x:hidden，不会撑出滚动条 */
-        margin-inline: calc(var(--mdlb-pad-x) * -1);
+        /* 高度按标题带算：刊头 151（560 时 136）+ 页签 + KPI 一路到「第 4 名之后」
+           那条小节线，再留 24px 余量，圆点和渐变在表格首行之前就收干净 */
+        height: var(--mdlb-band-h);
         pointer-events: none;
         z-index: 0;
         background-image: var(--mdlb-dot-img);
@@ -345,16 +352,19 @@ window.__ModuleLoader__.load({
            28s 走一格 ≈ 0.54px/s —— 52s 只有 0.29px/s，真人看不出在动；
            再快就成走马灯 */
         animation: mdlb-drift 28s linear infinite;
-        /* 两个 mask 取交集：
+        /* 三个 mask 取交集：
            ① 横向渐变 —— 左端完全透明，右段才浓，这是「左淡右浓」；
-           ② 指针处的洞 —— 中间挖空、外圈渐隐，用 transparent 挖洞而不是把点染色。
-           两组都写在 mask-image 里，靠 mask-composite 求交，不用额外图层 */
+           ② 指针处的洞 —— 中间挖空、外圈渐隐，用 transparent 挖洞而不是把点染色；
+           ③ 纵向淡出 —— 标题带下缘不能硬切，从 62% 起渐隐到带底。
+           三组都写在 mask-image 里，靠 mask-composite 求交，不用额外图层 */
         -webkit-mask-image:
           linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%),
-          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%),
+          linear-gradient(to bottom, #000 0 62%, rgba(0, 0, 0, .7) 82%, transparent 100%);
         mask-image:
           linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%),
-          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%),
+          linear-gradient(to bottom, #000 0 62%, rgba(0, 0, 0, .7) 82%, transparent 100%);
         -webkit-mask-composite: source-in;
         mask-composite: intersect;
       }
@@ -419,13 +429,14 @@ window.__ModuleLoader__.load({
          窗口里的点被提亮 → 看起来就是某片区域的点忽明忽暗。
          参考站的 particles 靠 noise 调制 size 得到同样的观感，这里用 mask 平移近似 */
       .mdlb-sheen {
-        position: sticky;
+        /* 跟网点纸一样收进标题带、随内容滚走：原来也是 sticky + 100vh，
+           滚下去等于在一片干净底上继续抹白点/底色点 */
+        position: absolute;
         top: 0;
-        left: 0;
+        left: calc(var(--mdlb-pad-x) * -1);
+        right: calc(var(--mdlb-pad-x) * -1);
         flex: none;
-        height: 100vh;
-        margin-bottom: -100vh;
-        margin-inline: calc(var(--mdlb-pad-x) * -1);
+        height: var(--mdlb-band-h);
         pointer-events: none;
         z-index: 0;
         background-image: radial-gradient(circle, var(--mdlb-sheen-dot) 2px, transparent 2.4px);
@@ -1125,9 +1136,11 @@ window.__ModuleLoader__.load({
            会退回到早就换掉的横向渐变 */
         .mdlb-paper {
           -webkit-mask-image:
-            linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%);
+            linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%),
+            linear-gradient(to bottom, #000 0 62%, rgba(0, 0, 0, .7) 82%, transparent 100%);
           mask-image:
-            linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%);
+            linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%),
+            linear-gradient(to bottom, #000 0 62%, rgba(0, 0, 0, .7) 82%, transparent 100%);
         }
       }
 
@@ -1159,6 +1172,9 @@ window.__ModuleLoader__.load({
       }
 
       @media (max-width: 900px) {
+        /* 窄面板：刊头矮一档（136 vs 151），标题带整条也短 24px。
+           不覆盖的话 560 宽会用 360px 的带，多盖出约 24px 到「第 4 名之后」下面 */
+        .mdlb-root { --mdlb-band-h: 336px; }
         .mdlb-lede b { font-size: 40px; }
         .mdlb-lede em { font-size: 14px; }
         .mdlb-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2202,12 +2218,13 @@ window.__ModuleLoader__.load({
         }
         const onMove = event => {
           if (reduce.matches) return
-          /* 洞画在 sticky 的纸上，纸钉在视口上，所以直接用视口坐标；
-             叠加 scrollTop 会让那块空当随滚动越拖越偏 */
+          /* 洞画在 absolute 的纸上，纸跟着内容滚走，所以坐标要连内容偏移一起算：
+             用视口坐标的话，滚下去指针移到表格区，洞还会画在纸上（此时已在屏幕外），
+             看起来像洞乱飘 */
           const box = root.getBoundingClientRect()
           const p = pointerRef.current
           p.x = event.clientX - box.left
-          p.y = event.clientY - box.top
+          p.y = event.clientY - box.top + root.scrollTop
           schedule()
         }
         const onLeave = () => {
