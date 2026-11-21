@@ -235,7 +235,7 @@ window.__ModuleLoader__.load({
       .mdlb-root {
         --mdlb-ink: var(--dsw-alias-label-primary);
         --mdlb-ink2: var(--dsw-alias-label-secondary);
-        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 80%, var(--dsw-alias-label-primary));
+        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 76%, var(--dsw-alias-label-primary));
         --mdlb-accent: #002fa7;
         --mdlb-accent-contrast: #ffffff;
         --mdlb-rule: color-mix(in srgb, var(--mdlb-ink) 11%, transparent);
@@ -260,7 +260,7 @@ window.__ModuleLoader__.load({
         /* 点色不能太深：ink3 小字压在点的像素上时，对比度会被底色吃掉
            （alpha .13 时 ink3 只有 3.7:1）。.06 让 dot 像素落在 #f0f0f0，
            最浅的次级文字仍有 4.5:1 */
-        --mdlb-dot: rgba(0, 0, 0, .06);
+        --mdlb-dot: rgba(0, 0, 0, .08);
         --mdlb-dot-accent: var(--mdlb-accent);
 
         display: flex;
