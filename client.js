@@ -276,6 +276,8 @@ window.__ModuleLoader__.load({
            radial-gradient 描不出直角，描边永远带一点圆弧 */
         --mdlb-dot-img: radial-gradient(circle, var(--mdlb-dot) 2px, transparent 2.4px);
         --mdlb-dot-soft: rgba(0, 0, 0, .03);
+        /* 扫掠层的点：亮色下用「白」把点提亮，是明暗而不是加色 */
+        --mdlb-sheen-dot: rgba(255, 255, 255, .55);
         /* 右上角那层蓝点：同一张 15×15 tile，只换 fill。冷暖就来自这层，
            不是靠把点画大或画密 */
         --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
@@ -309,6 +311,10 @@ window.__ModuleLoader__.load({
         --mdlb-accent: #96b0ff;
         --mdlb-dot: rgba(255, 255, 255, .08);  /* 暗底上再亮就发灰，别跟着亮色一起加深 */
         --mdlb-dot-soft: rgba(255, 255, 255, .03);
+        /* 暗色不能像亮色那样「提亮」：深底上把点提亮，浅色正文就压不住
+           （实测 ink3 从 8.0 掉到 3.2）。改成把点往底色拉平——
+           扫过的区域点暂时隐去，动效还在，字反而更清楚 */
+        --mdlb-sheen-dot: color-mix(in srgb, var(--dsw-alias-bg-base) 78%, transparent);
         --mdlb-dot-img: radial-gradient(circle, var(--mdlb-dot) 2px, transparent 2.4px);
         /* 深底上 .42 会过曝，蓝层降到 .20 并换成提亮后的 IKB */
         --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
@@ -408,8 +414,44 @@ window.__ModuleLoader__.load({
         from { background-position: 0 0; }
         to { background-position: var(--mdlb-dot-gap) calc(var(--mdlb-dot-gap) * -1); }
       }
+      /* 扫掠光带：在网点上再铺一层「白点」，同一个 15px 网格、同一个 28s，
+         两层点因此永远对齐，不会互相错位；只有一块圆形窗口在慢慢横移，
+         窗口里的点被提亮 → 看起来就是某片区域的点忽明忽暗。
+         参考站的 particles 靠 noise 调制 size 得到同样的观感，这里用 mask 平移近似 */
+      .mdlb-sheen {
+        position: sticky;
+        top: 0;
+        left: 0;
+        flex: none;
+        height: 100vh;
+        margin-bottom: -100vh;
+        margin-inline: calc(var(--mdlb-pad-x) * -1);
+        pointer-events: none;
+        z-index: 0;
+        background-image: radial-gradient(circle, var(--mdlb-sheen-dot) 2px, transparent 2.4px);
+        background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
+        background-position: 0 0;
+        animation: mdlb-drift 28s linear infinite;
+        /* 只在一块 300px 的圆里透出来，圆本身从左扫到右 */
+        -webkit-mask-image: radial-gradient(circle 150px at center, #000 0 38%, transparent 100%);
+        mask-image: radial-gradient(circle 150px at center, #000 0 38%, transparent 100%);
+        -webkit-mask-size: 300px 300px;
+        mask-size: 300px 300px;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        animation-name: mdlb-drift, mdlb-sweep;
+        animation-duration: 28s, 44s;
+        animation-timing-function: linear, ease-in-out;
+        animation-iteration-count: infinite, infinite;
+        animation-delay: 0s, -14s;
+      }
+      @keyframes mdlb-sweep {
+        from { -webkit-mask-position: -320px 40%; mask-position: -320px 40%; }
+        to { -webkit-mask-position: calc(100% + 320px) 40%; mask-position: calc(100% + 320px) 40%; }
+      }
+
       /* 内容必须在网点之上 */
-      .mdlb-root > *:not(.mdlb-paper):not(style) { position: relative; z-index: 1; }
+      .mdlb-root > *:not(.mdlb-paper):not(.mdlb-sheen):not(style) { position: relative; z-index: 1; }
 
       /* ---------- 刊头 ---------- */
       .mdlb-head {
@@ -1073,7 +1115,8 @@ window.__ModuleLoader__.load({
         .mdlb-pod,
         .mdlb-paper,
         .mdlb-paper::before,
-        .mdlb-paper::after { animation: none; }
+        .mdlb-paper::after,
+        .mdlb-sheen { animation: none; }
         /* 不流动，也不留洞：纸就是一张静止的网点。
            这里必须跟 .mdlb-paper 主规则的对角渐变保持一致，否则减动效下
            会退回到早就换掉的横向渐变 */
@@ -1103,7 +1146,7 @@ window.__ModuleLoader__.load({
         /* 这一档模型列只有 180px，两个胶囊（「新」+「max · 5 档」）要吃掉 80px，
            名字就只剩 100px 出头、被截成碎片。胶囊在这一档就藏掉，
            档位数量在宽屏和 tooltip 里都还在 */
-        .mdlb-table:not([data-wide="true"]) .mdlb-name .mdlb-chip { display: none; }
+        .mdlb-table:not([data-wide="true"]) .mdlb-name .mdlb-chip:not([data-tone="new"]) { display: none; }
         .mdlb-table:not([data-wide="true"]) tbody tr:nth-child(n) td:nth-child(-n+2) {
           background: var(--dsw-alias-bg-base);
         }
@@ -1139,7 +1182,7 @@ window.__ModuleLoader__.load({
            它一在，模型名就只剩 "GPT..." 这种碎片。窄屏把它藏掉，
            名字才有地方显示完整；藏了之后 168px 足够放 "Gemini 4 Carbon" */
         .mdlb-table:not([data-wide="true"]) .mdlb-name { min-width: 0; max-width: 168px; }
-        .mdlb-table:not([data-wide="true"]) .mdlb-name .mdlb-chip { display: none; }
+        .mdlb-table:not([data-wide="true"]) .mdlb-name .mdlb-chip:not([data-tone="new"]) { display: none; }
       }
 `
 
@@ -2295,6 +2338,7 @@ window.__ModuleLoader__.load({
       return h('div', { className: 'mdlb-root', ref: rootRef },
         h('style', { key: 'mdlb-style' }, CSS),
         h('div', { key: 'mdlb-paper', className: 'mdlb-paper', 'aria-hidden': 'true' }),
+        h('div', { key: 'mdlb-sheen', className: 'mdlb-sheen', 'aria-hidden': 'true' }),
         h('div', { className: 'mdlb-head' },
           h('div', { className: 'mdlb-mast' },
             h('h1', { className: 'mdlb-eyebrow' }, t('title')),
