@@ -32,7 +32,7 @@ window.__ModuleLoader__.load({
       secAll: '完整榜单',
       secRest: '第 4 名之后',
       secMatrix: '额度矩阵',
-      secMatrixRight: 'Token 单位 · 亿 / 月',
+      secMatrixRight: 'Token 单位 · 亿 / 月 · 周额度按 52/12 折月',
       secValue: '性价比排序',
       secModel: '模型 × 套餐',
       secBudget: '预算内套餐',
@@ -40,7 +40,7 @@ window.__ModuleLoader__.load({
       tabQuota: '订阅额度',
       tabValue: '性价比',
       boardSub: '综合轴 · 全部模型',
-      quotaSub: '每周额度 · 按套餐对比',
+      quotaSub: '月均额度 · 按套餐对比',
       valueSub: '每 $1 换到的 Token · 跨套餐排序',
       valueSubCny: '每 ¥1 换到的 Token · 跨套餐排序',
       refresh: '刷新',
@@ -64,6 +64,9 @@ window.__ModuleLoader__.load({
       colMaintain: '可维护性',
       colDuration: '评测用时',
       colCost: '费用',
+      colReleased: '发布',
+      effortCount: '{n} 档',
+      weeklyNote: '上游此格按周给额度，已折成月',
       model: '模型',
       plan: '套餐',
       newBadge: '新',
@@ -71,10 +74,10 @@ window.__ModuleLoader__.load({
       comboCount: '{n} 个组合',
       quotaCoverage: '{p} 家厂商 · {n} 个套餐',
       colPlan: '套餐',
-      colWeekly: '每周额度 · 亿 Token',
+      colWeekly: '月均额度 · 亿 Token',
       colApi: 'API 等值 · 月',
-      colPerDollar: '每 $1 · 万 Token',
-      colPerYuan: '每 ¥1 · 万 Token',
+      colPerDollar: '每 $1 · 万 Token / 月',
+      colPerYuan: '每 ¥1 · 万 Token / 月',
       planPrice: '{price} / 月',
       apiValue: '≈ {value}',
       rateHint: '人民币按 open.er-api.com 的美元汇率折算',
@@ -87,7 +90,7 @@ window.__ModuleLoader__.load({
       modelSub: '同一个模型，哪家套餐给得最多',
       budgetSub: '预算内能买到什么 · 按套餐月费排序',
       pickModel: '选择模型',
-      modelCoverage: '{n} 家收录 · {r} 个套餐',
+      modelCoverage: '{p} 家收录 · {r} 个套餐',
       sortBest: '单位价格最划算',
       sortCheap: '月费最低',
       soloNotice: '这个模型只有 {p} 收录',
@@ -97,7 +100,7 @@ window.__ModuleLoader__.load({
       colQuotaOfModel: '该模型额度 · 亿',
       budgetLabel: '月预算',
       usageLabel: '每月用量',
-      usageUnit: '亿 Token',
+      usageUnit: '亿 Token / 月',
       usageOptional: '选填',
       usagePlaceholder: '选填',
       budgetHit: '命中 {n} 个套餐',
@@ -132,7 +135,7 @@ window.__ModuleLoader__.load({
       secAll: 'Full ranking',
       secRest: 'From #4 down',
       secMatrix: 'Quota matrix',
-      secMatrixRight: 'millions of tokens / month',
+      secMatrixRight: '100M tok / month · weekly ×52/12',
       secValue: 'Value order',
       secModel: 'Model × plan',
       secBudget: 'Plans in budget',
@@ -164,6 +167,9 @@ window.__ModuleLoader__.load({
       colMaintain: 'Maintain',
       colDuration: 'Duration',
       colCost: 'Cost',
+      colReleased: 'Released',
+      effortCount: '{n} levels',
+      weeklyNote: 'Upstream quotes this cell per week; converted to a month',
       model: 'Model',
       plan: 'Plan',
       newBadge: 'new',
@@ -171,10 +177,10 @@ window.__ModuleLoader__.load({
       comboCount: '{n} combos',
       quotaCoverage: '{p} providers · {n} plans',
       colPlan: 'Plan',
-      colWeekly: 'Weekly quota · 100M tok',
+      colWeekly: 'Monthly quota · 100M tok',
       colApi: 'API value / mo',
-      colPerDollar: 'Per $1 · 10k tokens',
-      colPerYuan: 'Per ¥1 · 10k tokens',
+      colPerDollar: 'Per $1 · 10k tok / mo',
+      colPerYuan: 'Per ¥1 · 10k tok / mo',
       planPrice: '{price} / mo',
       apiValue: '≈ {value}',
       rateHint: 'CNY converted with the USD rate from open.er-api.com',
@@ -197,7 +203,7 @@ window.__ModuleLoader__.load({
       colQuotaOfModel: 'Quota · 100M',
       budgetLabel: 'Monthly budget',
       usageLabel: 'Monthly usage',
-      usageUnit: '× 100M tokens',
+      usageUnit: '× 100M tok / mo',
       usageOptional: 'optional',
       usagePlaceholder: 'optional',
       budgetHit: '{n} plans',
@@ -265,6 +271,7 @@ window.__ModuleLoader__.load({
         /* 方块网点：15×15 的 SVG tile 里放一个 5×5 的硬边方块。
            radial-gradient 描不出直角，描边永远带一点圆弧 */
         --mdlb-dot-img: radial-gradient(circle, var(--mdlb-dot) 2px, transparent 2.4px);
+        --mdlb-dot-soft: rgba(0, 0, 0, .03);
         /* 右上角那层蓝点：同一张 15×15 tile，只换 fill。冷暖就来自这层，
            不是靠把点画大或画密 */
         --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
@@ -297,6 +304,7 @@ window.__ModuleLoader__.load({
       .mdlb-root[data-theme="dark"] {
         --mdlb-accent: #96b0ff;
         --mdlb-dot: rgba(255, 255, 255, .08);  /* 暗底上再亮就发灰，别跟着亮色一起加深 */
+        --mdlb-dot-soft: rgba(255, 255, 255, .03);
         --mdlb-dot-img: radial-gradient(circle, var(--mdlb-dot) 2px, transparent 2.4px);
         /* 深底上 .42 会过曝，蓝层降到 .20 并换成提亮后的 IKB */
         --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
@@ -323,8 +331,9 @@ window.__ModuleLoader__.load({
         background-image: var(--mdlb-dot-img);
         background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
         background-position: 0 0;
-        /* 流动：走满一个网格正好 15px，首尾严丝合缝看不出接缝 */
-        animation: mdlb-drift 16s linear infinite;
+        /* 流动：走满一个网格正好 15px，首尾严丝合缝看不出接缝。
+           52s 一格 —— 再快就成走马灯，参考站那种「几乎没动、但确实在动」才舒服 */
+        animation: mdlb-drift 52s linear infinite;
         /* 两个 mask 取交集：
            ① 横向渐变 —— 左端完全透明，右段才浓，这是「左淡右浓」；
            ② 指针处的洞 —— 中间挖空、外圈渐隐，用 transparent 挖洞而不是把点染色。
@@ -334,6 +343,29 @@ window.__ModuleLoader__.load({
           radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
         mask-image:
           linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%),
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
+        -webkit-mask-composite: source-in;
+        mask-composite: intersect;
+      }
+      /* 副层：第二张网点纸，斜向慢移。两个方向的平移叠在一起，
+         才不会像一块布整体平移；速度比主层慢，肉眼只能感觉到「在动」 */
+      .mdlb-paper::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: radial-gradient(circle, var(--mdlb-dot-soft) 2px, transparent 2.4px);
+        background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
+        background-position: 0 0;
+        animation: mdlb-drift-diag 133s linear infinite;
+        /* 只在右上角一小块有副层，叠出「点忽明忽暗」的层次；两层完全重叠处会加深，
+           所以副层的色比主层淡得多（.03 对 .105），最暗处仍守住 4.5:1 */
+        /* 洞必须同时挖在这一层：否则光标扫过时只擦掉了主层，副层还留在洞里 */
+        -webkit-mask-image:
+          radial-gradient(ellipse 520px 360px at 100% 0%, #000 0 12%, rgba(0, 0, 0, .5) 45%, transparent 80%),
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
+        mask-image:
+          radial-gradient(ellipse 520px 360px at 100% 0%, #000 0 12%, rgba(0, 0, 0, .5) 45%, transparent 80%),
           radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
         -webkit-mask-composite: source-in;
         mask-composite: intersect;
@@ -348,7 +380,7 @@ window.__ModuleLoader__.load({
         background-image: var(--mdlb-dot-blue);
         background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
         background-position: 0 0;
-        animation: mdlb-drift 16s linear infinite;
+        animation: mdlb-drift 52s linear infinite;
         /* 只在右上角一块透出蓝点，往下往左退成灰；洞同样要在这一层挖掉 */
         -webkit-mask-image:
           radial-gradient(ellipse 620px 430px at 100% 0%, #000 0 10%, rgba(0, 0, 0, .5) 38%, transparent 76%),
@@ -362,6 +394,12 @@ window.__ModuleLoader__.load({
       @keyframes mdlb-drift {
         from { background-position: 0 0; }
         to { background-position: var(--mdlb-dot-gap) 0; }
+      }
+      /* 斜向：x 走满一格、y 反着走一格，路径是 45°，周期又是整数倍格宽，
+         首尾同样对得齐 */
+      @keyframes mdlb-drift-diag {
+        from { background-position: 0 0; }
+        to { background-position: var(--mdlb-dot-gap) calc(var(--mdlb-dot-gap) * -1); }
       }
       /* 内容必须在网点之上 */
       .mdlb-root > *:not(.mdlb-paper):not(style) { position: relative; z-index: 1; }
@@ -630,14 +668,14 @@ window.__ModuleLoader__.load({
         font-size: 10px;
         letter-spacing: .15em;
         text-transform: uppercase;
-        padding: 8px 11px;
+        padding: 8px 9px;
         border-bottom: 1px solid var(--mdlb-rule-2);
       }
       .mdlb-table th[data-sortable="true"] { cursor: pointer; transition: color .12s ease; }
       .mdlb-table th[data-sortable="true"]:hover { color: var(--mdlb-ink); }
       .mdlb-table th[data-active="true"] { color: var(--mdlb-accent); }
       .mdlb-table td {
-        padding: 8px 11px;
+        padding: 8px 9px;
         border-bottom: 1px solid var(--mdlb-rule);
         text-align: right;
         white-space: nowrap;
@@ -788,6 +826,19 @@ window.__ModuleLoader__.load({
         white-space: nowrap; letter-spacing: .02em;
       }
       @media (max-width: 1180px) { .mdlb-caption { display: none; } }
+
+      /* 「全部」视图里每家一段：段与段之间用发丝线断开，标题左对齐 */
+      .mdlb-quota-block { border-top: 1px solid var(--mdlb-rule); padding: 14px 16px 0; }
+      .mdlb-quota-block:first-of-type { border-top: 0; padding-top: 4px; }
+      .mdlb-quota-block .mdlb-caption { margin: 0 0 6px; }
+      .mdlb-quota-title {
+        display: flex; align-items: baseline; gap: 2px;
+        margin: 0 0 8px; font-size: 11px; letter-spacing: .04em;
+        color: var(--mdlb-ink3);
+      }
+      .mdlb-quota-title b { color: var(--mdlb-ink); font-weight: 600; letter-spacing: .02em; }
+      /* 日期列只占 5 个字符，不参与拉伸 */
+      .mdlb-date { white-space: nowrap; font-variant-numeric: tabular-nums; width: 1%; }
 
       .mdlb-plan-head { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
       .mdlb-plan-name { font-weight: 550; color: var(--mdlb-ink); }
@@ -1006,11 +1057,17 @@ window.__ModuleLoader__.load({
         .mdlb-main,
         .mdlb-table tbody tr,
         .mdlb-pod,
-        .mdlb-paper { animation: none; }
-        /* 不流动，也不留洞：纸就是一张静止的网点 */
+        .mdlb-paper,
+        .mdlb-paper::before,
+        .mdlb-paper::after { animation: none; }
+        /* 不流动，也不留洞：纸就是一张静止的网点。
+           这里必须跟 .mdlb-paper 主规则的对角渐变保持一致，否则减动效下
+           会退回到早就换掉的横向渐变 */
         .mdlb-paper {
-          -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%);
-          mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%);
+          -webkit-mask-image:
+            linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%);
+          mask-image:
+            linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%);
         }
       }
 
@@ -1155,6 +1212,59 @@ window.__ModuleLoader__.load({
       return value === null ? null : value
     }
 
+    /* Upstream mixes two period bases in the same catalog: 79 cells quote "亿 Token/周"
+       and 70 quote "亿 Token/月". Comparing them directly is off by 52/12 ≈ 4.33x, so
+       every number this panel compares is first normalised to a month. */
+    const WEEKS_PER_MONTH = 52 / 12
+
+    /** 'week' | 'month' | '' from the unit the site prints inside the cell. */
+    function quotaPeriodOf(cell) {
+      const unit = String((cell && cell.quotaUnit) || '')
+      if (!unit) return ''
+      return /周/.test(unit) ? 'week' : /月/.test(unit) ? 'month' : ''
+    }
+
+    /** API-equivalent dollars for the cell, converted to a month like the quota. */
+    function apiMonthUsd(cell) {
+      const usd = parseNum(cell && cell.api)
+      if (usd === null) return null
+      return quotaPeriodOf(cell) === 'week' ? usd * WEEKS_PER_MONTH : usd
+    }
+
+    /** A quota cell in 亿 Token per month, plus the period it was quoted in. */
+    function quotaMonthYi(cell) {
+      const raw = quotaYi(cell && cell.quota)
+      const period = quotaPeriodOf(cell)
+      if (raw === null) return { raw: null, month: null, period }
+      return { raw, month: period === 'week' ? raw * WEEKS_PER_MONTH : raw, period }
+    }
+
+    /* The quota catalog and the leaderboard spell the same model differently
+       ("Opus 5.5" vs "Claude Opus 5.5"). Without this the picker lists both, and the
+       #1 model on the board has no page at all. Unlisted names are left untouched. */
+    const MODEL_ALIAS = {
+      'Sonnet 5.5': 'Claude Sonnet 5.5',
+      'Opus 5.5': 'Claude Opus 5.5',
+      'Fable 5.2': 'Claude Fable 5.2',
+      'Fable 5.1': 'Claude Fable 5.1',
+      'K3': 'Kimi K3',
+      'K3.1 Pro': 'Kimi K3.1 Pro',
+      'MiMo V2.6 Flash': 'MiMo-V2.6-Flash',
+      'MiMo V2.6 Pro': 'MiMo-V2.6-Pro',
+      'DeepSeek V4.1 Flash 1017': 'DeepSeek V4.1 Flash (1017)',
+    }
+
+    function modelName(name) {
+      return MODEL_ALIAS[name] || name
+    }
+
+    /** 亿 Token with the same precision the site uses (2 decimals below 10, else 1/0). */
+    function formatYi(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '—'
+      const shown = value >= 10 ? value.toFixed(value >= 100 ? 0 : 1) : value.toFixed(2)
+      return shown.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1')
+    }
+
     /**
      * Flatten the quota payload into one entry per (plan, model) pair — the unit
      * both new tabs work in. `price` is USD, `quotaYi` is 亿 Token.
@@ -1172,12 +1282,14 @@ window.__ModuleLoader__.load({
               if (!cell) continue
               // a row can exist with an empty quota upstream (5 such cells). Dropping it
               // silently under-counts the plan's coverage, so keep it and mark it unknown.
-              const quota = quotaYi(cell.quota)
+              const q = quotaMonthYi(cell)
               models.push({
-                model: row.model,
-                quota,
-                quotaKnown: quota !== null,
-                apiNum: parseNum(cell.api),
+                model: modelName(row.model),
+                quota: q.month,
+                quotaRaw: q.raw,
+                quotaPeriod: q.period,
+                quotaKnown: q.raw !== null,
+                apiNum: apiMonthUsd(cell),
                 perDollarRaw: cell.perDollar,
                 perDollar: perUnitValue(cell.perDollar, 'USD', { value: RATE_FALLBACK }),
               })
@@ -1342,6 +1454,7 @@ window.__ModuleLoader__.load({
           if (sort.key === 'model') return row.name
           if (sort.key === 'duration') return durationMinutes(row.duration)
           if (sort.key === 'cost') return dollarsOf(row.cost)
+          if (sort.key === 'released') return Date.parse(row.released) || null
           return row[sort.key]
         }
         copy.sort((a, b) => {
@@ -1406,9 +1519,10 @@ window.__ModuleLoader__.load({
                 ...SCORE_COLUMNS.map(([key, label]) => header(key, t(label))),
                 header('duration', t('colDuration')),
                 header('cost', t('colCost')),
+                header('released', t('colReleased')),
               )),
               h('tbody', null, tableRows.length === 0
-                ? h('tr', { key: '__empty__' }, h('td', { className: 'mdlb-empty-cell', colSpan: 10 },
+                ? h('tr', { key: '__empty__' }, h('td', { className: 'mdlb-empty-cell', colSpan: 11 },
                   h('div', { className: 'mdlb-empty' },
                     h('span', { className: 'mdlb-empty-title' }, t('noMatch')),
                     h('span', null, t('noMatchHint')))))
@@ -1422,7 +1536,10 @@ window.__ModuleLoader__.load({
                     rel: 'noreferrer noopener',
                   }, row.name),
                   row.isNew ? h('span', { className: 'mdlb-chip', 'data-tone': 'new' }, t('newBadge')) : null,
-                  row.effort ? h('span', { className: 'mdlb-chip' }, row.effort) : null,
+                  row.effort
+                    ? h('span', { className: 'mdlb-chip', title: row.effortCount ? '共 ' + row.effortCount + ' 个档位，本行是最优档' : undefined },
+                      row.effort + (row.effortCount ? ' · ' + row.effortCount + ' 档' : ''))
+                    : null,
                 )),
                 ...SCORE_COLUMNS.map(([key]) => h('td', { key },
                   h('span', { className: key === 'overall' ? 'mdlb-score mdlb-main-score' : 'mdlb-score' },
@@ -1432,6 +1549,9 @@ window.__ModuleLoader__.load({
                   ))),
                 h('td', { className: 'mdlb-muted' }, row.duration || '—'),
                 h('td', { className: 'mdlb-muted' }, row.cost || '—'),
+                // 发布日期判断「新的值不值得换」；上游 54/54 都有，只是此前没渲染
+                h('td', { className: 'mdlb-muted mdlb-date', title: row.released || undefined },
+                  row.released ? row.released.slice(5) : '—'),
               ))),
             ),
           ),
@@ -1439,15 +1559,46 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** One quota matrix cell: the month-normalised figure on top, API value or per-unit below. */
+    function quotaCell(cell, key, { t, currency, rate }) {
+      const q = quotaMonthYi(cell)
+      // 上游这一格按周给额度时，表里显示折月后的数，原值留在 tooltip
+      const note = q.period === 'week'
+        ? '上游按周给 ' + cell.quota + '，已按 52/12 折成月'
+        : undefined
+      const line1 = h('b', null, q.raw === null ? '—' : '≈ ' + formatYi(q.month))
+      // 上游有时不写数字而写一句话（「共用月池上限…」）：留在 tooltip，副行退回单位价格
+      const apiUsd = apiMonthUsd(cell)
+      const line2 = apiUsd !== null
+        ? h('small', null, t('apiValue', { value: usdText(apiUsd, currency, rate) }))
+        : h('small', {
+          title: cell.api || cell.perDollar || undefined,
+          'data-qualifier': String(!cell.api && !cell.perDollar),
+        }, cell.perDollar ? perUnitText(cell.perDollar, currency, rate) : '—')
+      return h('td', { key },
+        h('div', {
+          className: 'mdlb-cell',
+          title: note || (cell.perDollar ? perUnitText(cell.perDollar, currency, rate) : undefined),
+        }, line1, line2))
+    }
+
     function QuotaTable({ sections, t, currency, onCurrency, rate }) {
-      const [provider, setProvider] = useState(null)
+      // 默认停在「全部」：KPI 说 68 个套餐，只显示一家、7 行，数字和表对不上
+      const [provider, setProvider] = useState('*')
+      const allPlans = useMemo(() => sections.reduce((n, s) => n + s.tables.reduce((m, tb) => m + tb.plans.length, 0), 0), [sections])
       const current = useMemo(() => {
         if (sections.length === 0) return null
-        return sections.find(s => s.provider === provider) || sections.find(s => s.provider === 'Google') || sections[0]
+        if (provider === '*') return null
+        return sections.find(s => s.provider === provider) || sections[0]
       }, [sections, provider])
 
-      if (!current) return null
-      const table = current.tables[0]
+      if (sections.length === 0) return null
+
+      // 「全部」视图：每家一段，只列出该家在售的套餐，不做跨家横向对比
+      // （不同厂商的套餐名不可比，硬拼成一张表会误导）
+      const blocks = provider === '*'
+        ? sections.flatMap(s => s.tables.map(tb => ({ provider: s.provider, table: tb })))
+        : [{ provider: current.provider, table: current.tables[0] }]
 
       return h('div', { className: 'mdlb-main' },
         h(SectionBar, { no: '01', title: t('secMatrix'), right: t('secMatrixRight') }),
@@ -1455,58 +1606,57 @@ window.__ModuleLoader__.load({
           h('div', { className: 'mdlb-card-top' },
             h('div', { className: 'mdlb-toolbar-left' },
               h('div', { className: 'mdlb-providers' },
+                h('button', {
+                  key: '*',
+                  className: 'mdlb-provider',
+                  'data-active': String(provider === '*'),
+                  onClick: () => setProvider('*'),
+                }, t('allProviders') + ' · ' + allPlans),
                 sections.map(s => h('button', {
                   key: s.provider,
                   className: 'mdlb-provider',
-                  'data-active': String(s.provider === current.provider),
+                  'data-active': String(provider === s.provider),
                   onClick: () => setProvider(s.provider),
                 }, s.provider)),
               ),
             ),
             h('div', { className: 'mdlb-toolbar-right' },
-              h('span', { className: 'mdlb-count' }, t('quotaCoverage', {
-                p: sections.length,
-                n: sections.reduce((sum, s) => sum + s.tables.reduce((acc, tb) => acc + tb.plans.length, 0), 0),
-              })),
-              table.caption
-                ? h('p', { className: 'mdlb-caption' },
-                  table.caption
-                    .replace(/横向查看套餐.*$/, '')
-                    .replace(/USD|CNY/g, currency)
-                    .replace(/每\s*\$1/g, currency === 'CNY' ? '每 ¥1' : '每 $1')
-                    .trim())
-                : null,
+              h('span', { className: 'mdlb-count' }, t('quotaCoverage', { p: sections.length, n: allPlans })),
               h(CurrencySwitch, { currency, onCurrency, rate, t }),
             ),
           ),
-          h('div', { className: 'mdlb-body' },
-            h('table', { className: 'mdlb-table', 'data-wide': 'true' },
-              h('thead', null, h('tr', null,
-                h('th', { scope: 'col', className: 'mdlb-left' }, t('model')),
-                ...table.plans.map(plan => h('th', { key: plan.name, scope: 'col' },
-                  h('div', { className: 'mdlb-plan-head' },
-                    h('span', { className: 'mdlb-plan-name' }, plan.name),
-                    h('span', { className: 'mdlb-plan-price' },
-                      t('planPrice', { price: priceText(plan.price, currency, rate) })),
-                  ))),
-              )),
-              h('tbody', null, table.rows.map((row, i) => h('tr', { key: row.model, style: { '--i': i } },
-                h('td', { className: 'mdlb-left' }, row.model),
-                ...row.cells.map((cell, i) => h('td', { key: i },
-                  h('div', { className: 'mdlb-cell', title: cell.perDollar ? perUnitText(cell.perDollar, currency, rate) : undefined },
-                    h('b', null, cell.quota || '—'),
-                    cell.api && parseNum(cell.api) !== null
-                      ? h('small', null, t('apiValue', { value: apiText(cell.api, currency, rate) }))
-                      // the site sometimes writes a sentence instead of a number ("共用月池上限…"):
-                      // keep it in the tooltip and show the compact per-unit figure, or the row gets too wide
-                      : h('small', {
-                        title: cell.api || cell.perDollar || undefined,
-                        'data-qualifier': String(!cell.api && !cell.perDollar),
-                      }, cell.perDollar ? perUnitText(cell.perDollar, currency, rate) : '—'),
-                  ))),
-              ))),
+          blocks.map(({ provider: name, table }) => h('div', { key: name + '|' + (table.caption || ''), className: 'mdlb-quota-block' },
+            provider === '*'
+              ? h('p', { className: 'mdlb-quota-title' },
+                h('b', null, name),
+                h('span', null, ' · ' + table.plans.length + ' 个套餐'))
+              : null,
+            table.caption
+              ? h('p', { className: 'mdlb-caption' },
+                table.caption
+                  .replace(/横向查看套餐.*$/, '')
+                  .replace(/USD|CNY/g, currency)
+                  .replace(/每\s*\$1/g, currency === 'CNY' ? '每 ¥1' : '每 $1')
+                  .trim())
+              : null,
+            h('div', { className: 'mdlb-body' },
+              h('table', { className: 'mdlb-table', 'data-wide': 'true' },
+                h('thead', null, h('tr', null,
+                  h('th', { scope: 'col', className: 'mdlb-left' }, t('model')),
+                  ...table.plans.map(plan => h('th', { key: plan.name, scope: 'col' },
+                    h('div', { className: 'mdlb-plan-head' },
+                      h('span', { className: 'mdlb-plan-name' }, plan.name),
+                      h('span', { className: 'mdlb-plan-price' },
+                        t('planPrice', { price: priceText(plan.price, currency, rate) })),
+                    ))),
+                )),
+                h('tbody', null, table.rows.map((row, i) => h('tr', { key: row.model, style: { '--i': i } },
+                  h('td', { className: 'mdlb-left' }, modelName(row.model)),
+                  ...row.cells.map((cell, j) => quotaCell(cell, j, { t, currency, rate })),
+                ))),
+              ),
             ),
-          ),
+          )),
         ),
       )
     }
@@ -1685,7 +1835,7 @@ window.__ModuleLoader__.load({
                     h('span', { className: 'mdlb-plan-meta' },
                       priceText('$' + row.priceUsd, currency, rate) + ' / ' + t('perMonthUnit')),
                   )),
-                  h('td', null, row.quotaKnown === false ? '—' : '≈ ' + row.quota),
+                  h('td', null, row.quotaKnown === false ? '—' : '≈ ' + formatYi(row.quota)),
                   hasApi
                     ? h('td', { className: 'mdlb-muted' }, row.apiNum === null ? '—' : usdText(row.apiNum, currency, rate))
                     : null,
@@ -1878,8 +2028,9 @@ window.__ModuleLoader__.load({
                               const bad = months !== null && months < 1
                               return h('span', { key: m.model, className: 'mdlb-detail-item', 'data-bad': String(bad), 'data-unknown': String(!known) },
                                 h('span', null, m.model),
-                                known ? h('b', null, '≈ ' + m.quota) : null,
-                                known ? h('span', null, '亿') : h('span', { className: 'mdlb-unknown-tag' }, t('quotaUnknown')),
+                                known
+                                  ? h('b', null, '≈ ' + formatYi(m.quota) + ' 亿/月')
+                                  : h('span', { className: 'mdlb-unknown-tag' }, t('quotaUnknown')),
                                 months !== null
                                   ? h('span', { className: 'mdlb-goods' },
                                     months >= 1 ? t('monthsValue', { v: Math.floor(months) }) : t('monthsValue', { v: months.toFixed(2) }))
@@ -2000,14 +2151,16 @@ window.__ModuleLoader__.load({
                 if (!plan) return
                 const per = parseNum(cell.perDollar)
                 if (per === null) return
+                const q = quotaMonthYi(cell)
                 out.push({
                   id: section.provider + '|' + plan.name + '|' + row.model,
                   provider: section.provider,
                   plan: plan.name,
                   price: plan.price,
-                  model: row.model,
-                  quota: cell.quota || '—',
-                  apiNum: parseNum(cell.api),
+                  model: modelName(row.model),
+                  quota: q.raw === null ? '—' : '≈ ' + formatYi(q.month),
+                  quotaPeriod: q.period,
+                  apiNum: apiMonthUsd(cell),
                   perDollar: per,
                   perDollarRaw: cell.perDollar,
                 })
