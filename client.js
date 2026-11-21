@@ -787,6 +787,9 @@ window.__ModuleLoader__.load({
         background: var(--mdlb-accent-wash);
         font-weight: 600;
       }
+      /* 「新」在表格里紧贴模型名，6px 会被读成名字的一部分：左移 4px（合计 10px 视觉间隔），
+         内边距从 5px 收到 3px，整体占位仍是 28.7px，列宽与截断数一格不变 */
+      .mdlb-name .mdlb-chip[data-tone="new"] { margin-left: 4px; padding: 0 3px; }
       .mdlb-chip[data-tone="short"] {
         color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 76%, var(--mdlb-ink));
         border-color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 46%, transparent);
