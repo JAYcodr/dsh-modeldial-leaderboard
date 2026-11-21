@@ -332,8 +332,9 @@ window.__ModuleLoader__.load({
         background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
         background-position: 0 0;
         /* 流动：走满一个网格正好 15px，首尾严丝合缝看不出接缝。
-           52s 一格 —— 再快就成走马灯，参考站那种「几乎没动、但确实在动」才舒服 */
-        animation: mdlb-drift 52s linear infinite;
+           28s 走一格 ≈ 0.54px/s —— 52s 只有 0.29px/s，真人看不出在动；
+           再快就成走马灯 */
+        animation: mdlb-drift 28s linear infinite;
         /* 两个 mask 取交集：
            ① 横向渐变 —— 左端完全透明，右段才浓，这是「左淡右浓」；
            ② 指针处的洞 —— 中间挖空、外圈渐隐，用 transparent 挖洞而不是把点染色。
@@ -357,7 +358,7 @@ window.__ModuleLoader__.load({
         background-image: radial-gradient(circle, var(--mdlb-dot-soft) 2px, transparent 2.4px);
         background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
         background-position: 0 0;
-        animation: mdlb-drift-diag 133s linear infinite;
+        animation: mdlb-drift-diag 71s linear infinite;
         /* 只在右上角一小块有副层，叠出「点忽明忽暗」的层次；两层完全重叠处会加深，
            所以副层的色比主层淡得多（.03 对 .105），最暗处仍守住 4.5:1 */
         /* 洞必须同时挖在这一层：否则光标扫过时只擦掉了主层，副层还留在洞里 */
@@ -380,7 +381,7 @@ window.__ModuleLoader__.load({
         background-image: var(--mdlb-dot-blue);
         background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
         background-position: 0 0;
-        animation: mdlb-drift 52s linear infinite;
+        animation: mdlb-drift 28s linear infinite;
         /* 只在右上角一块透出蓝点，往下往左退成灰；洞同样要在这一层挖掉 */
         -webkit-mask-image:
           radial-gradient(ellipse 620px 430px at 100% 0%, #000 0 10%, rgba(0, 0, 0, .5) 38%, transparent 76%),
@@ -1074,6 +1075,28 @@ window.__ModuleLoader__.load({
       }
 
       /* ---------- 窄面板（侧栏窄宽） ---------- */
+      /* 冻结「模型」列的门槛单独一条：榜单表在 1230 以下都会横向溢出，
+         只要溢出，模型名就会从冻结列右边滑走。这条与下面的窄面板断点无关 */
+      @media (max-width: 1229px) {
+        .mdlb-table:not([data-wide="true"]) th:nth-child(2),
+        .mdlb-table:not([data-wide="true"]) td:nth-child(2) {
+          position: sticky; left: 72px;
+          background: var(--dsw-alias-bg-base);
+          box-shadow: inset -1px 0 0 var(--mdlb-rule);
+        }
+        .mdlb-table:not([data-wide="true"]) th:nth-child(2) { z-index: 3; }
+        .mdlb-table:not([data-wide="true"]) td:nth-child(2) { z-index: 2; }
+        /* min-width 必须一起放掉：全局是 168px，只改 max-width 会被它顶住，
+           冻结两列会吃掉窄屏一半宽度，分数列反而更难看 */
+        .mdlb-table:not([data-wide="true"]) .mdlb-name { min-width: 0; max-width: 180px; }
+        .mdlb-table:not([data-wide="true"]) tbody tr:nth-child(n) td:nth-child(-n+2) {
+          background: var(--dsw-alias-bg-base);
+        }
+        .mdlb-table:not([data-wide="true"]) tbody tr:nth-child(n):hover td:nth-child(-n+2) {
+          background: var(--mdlb-wash);
+        }
+      }
+
       @media (max-width: 900px) {
         .mdlb-lede b { font-size: 40px; }
         .mdlb-lede em { font-size: 14px; }
@@ -1097,6 +1120,11 @@ window.__ModuleLoader__.load({
         .mdlb-pod-unit { display: none; }
         .mdlb-pod-detail { display: none; }
         .mdlb-sec .mdlb-sec-rt { display: none; }
+        /* 窄面板：模型列里那个档位胶囊（max · 5 档）占 80px 左右，
+           它一在，模型名就只剩 "GPT..." 这种碎片。窄屏把它藏掉，
+           名字才有地方显示完整；藏了之后 168px 足够放 "Gemini 4 Carbon" */
+        .mdlb-table:not([data-wide="true"]) .mdlb-name { min-width: 0; max-width: 168px; }
+        .mdlb-table:not([data-wide="true"]) .mdlb-name .mdlb-chip { display: none; }
       }
 `
 
