@@ -52,13 +52,27 @@ GET /__modeldial/quota         # 额度矩阵，?force=1 跳过缓存
 
 ## 安装
 
+先把仓库克隆或解压到任意目录（下称 `<插件目录>`，用绝对路径），再把它链进你正在使用的 profile：
+
 ```bash
-# 软链进 profile
-ln -s /path/to/modeldial-leaderboard ~/.dsh/profiles/desktop/node_modules/@local/modeldial-leaderboard
-# 在 profile 的 package.json 里加依赖
-#   "@local/modeldial-leaderboard": "link:/path/to/modeldial-leaderboard"
-# 然后重启 DSH（Host 端只在启动时载入一次；只改 client.js 刷新页面即可）
+# <profile> 换成你实际的 profile 名，默认是 desktop
+mkdir -p ~/.dsh/profiles/<profile>/node_modules/@local
+ln -s "<插件目录>" ~/.dsh/profiles/<profile>/node_modules/@local/modeldial-leaderboard
 ```
+
+然后编辑 `~/.dsh/profiles/<profile>/package.json`，在 `dependencies` 里加一行：
+
+```json
+"@local/modeldial-leaderboard": "link:<插件目录>"
+```
+
+并在同文件的 `dsh.profile.bundles` 数组里加上 `@local/modeldial-leaderboard`。
+
+重启 DSH 生效（Host 端只在启动时载入一次；只改 `client.js` 刷新页面即可）。
+
+## 许可
+
+目前未附带 LICENSE 文件，默认保留所有权利。
 
 ## 卸载
 
