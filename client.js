@@ -235,7 +235,7 @@ window.__ModuleLoader__.load({
       .mdlb-root {
         --mdlb-ink: var(--dsw-alias-label-primary);
         --mdlb-ink2: var(--dsw-alias-label-secondary);
-        --mdlb-ink3: var(--dsw-alias-label-tertiary);
+        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 82%, var(--dsw-alias-label-primary));
         --mdlb-accent: #002fa7;
         --mdlb-accent-contrast: #ffffff;
         --mdlb-rule: color-mix(in srgb, var(--mdlb-ink) 11%, transparent);
