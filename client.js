@@ -1606,7 +1606,8 @@ window.__ModuleLoader__.load({
     function quotaCell(cell, key, { t, currency, rate, provider }) {
       const q = quotaMonthYi(cell, provider)
       // 上游这一格按周给额度时，表里显示折月后的数，原值留在 tooltip
-      const note = q.period === 'week'
+      // 空额度不给折算提示：会拼出「上游按周给 ，已按…」这种残句
+      const note = q.period === 'week' && q.raw !== null
         ? '上游按周给 ' + cell.quota + '，已按 52/12 折成月'
         : undefined
       const line1 = h('b', null, q.raw === null ? '—' : '≈ ' + formatYi(q.month))
