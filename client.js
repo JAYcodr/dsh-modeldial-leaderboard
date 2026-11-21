@@ -290,7 +290,7 @@ window.__ModuleLoader__.load({
       :where([data-ds-dark-theme], .mdlb-dark) .mdlb-root,
       .mdlb-root[data-theme="dark"] {
         --mdlb-accent: #96b0ff;
-        --mdlb-dot: rgba(255, 255, 255, .06);
+        --mdlb-dot: rgba(255, 255, 255, .08);
         --mdlb-accent-contrast: #0f1115;
         --mdlb-rule-2: color-mix(in srgb, var(--mdlb-ink) 84%, transparent);
       }
