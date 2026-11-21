@@ -235,7 +235,7 @@ window.__ModuleLoader__.load({
       .mdlb-root {
         --mdlb-ink: var(--dsw-alias-label-primary);
         --mdlb-ink2: var(--dsw-alias-label-secondary);
-        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 76%, var(--dsw-alias-label-primary));
+        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 74%, var(--dsw-alias-label-primary));
         --mdlb-accent: #002fa7;
         --mdlb-accent-contrast: #ffffff;
         --mdlb-rule: color-mix(in srgb, var(--mdlb-ink) 11%, transparent);
@@ -255,13 +255,16 @@ window.__ModuleLoader__.load({
         --mdlb-line-strong: var(--mdlb-rule-w);
         --mdlb-text-faint: var(--mdlb-ink3);
         --mdlb-skel-bg: color-mix(in srgb, var(--mdlb-ink) 10%, transparent);
-        /* 半调网点：零字节的网格纸，点距 12px、半径 1px */
+        /* 半调网点：零字节的网格纸。网格 15px、点半径 2.3px —— 点更粗但不密 */
         --mdlb-pad-x: 32px;
-        /* 点色不能太深：ink3 小字压在点的像素上时，对比度会被底色吃掉
-           （alpha .13 时 ink3 只有 3.7:1）。.06 让 dot 像素落在 #f0f0f0，
-           最浅的次级文字仍有 4.5:1 */
-        --mdlb-dot: rgba(0, 0, 0, .08);
-        --mdlb-dot-accent: var(--mdlb-accent);
+        --mdlb-dot-gap: 15px;
+        /* 点色上限由 ink3 小字的对比度反推：点越深，压在点像素上的次级文字越糟。
+           实测 .115 时最浅次级文字压在点像素上只有 4.39:1（差一点点），
+           降到 .105 后点像素 #e6e6e6、同一处 4.6:1，视觉上看不出差别 */
+        --mdlb-dot: rgba(0, 0, 0, .105);
+        /* 指针不在面板上时把洞推到画布外，等于「没有洞」 */
+        --mdlb-mx: -9999px;
+        --mdlb-my: -9999px;
 
         display: flex;
         flex-direction: column;
@@ -276,12 +279,8 @@ window.__ModuleLoader__.load({
         padding: 0 32px 20px;
         box-sizing: border-box;
         color: var(--mdlb-ink);
-        /* background-attachment 用默认的 scroll：在滚动容器里这意味着网点钉在这层框上、
-           不跟着内容走。网点是纸，内容是纸上的印刷品 */
+        /* 网点不画在这一层：这里是底色，点和便签都在上面那层 sticky 的纸上 */
         background-color: var(--dsw-alias-bg-base);
-        background-image: radial-gradient(circle, var(--mdlb-dot) 1px, transparent 1.2px);
-        background-size: 12px 12px;
-        background-position: 0 0;
         font-size: 13px;
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
@@ -290,35 +289,47 @@ window.__ModuleLoader__.load({
       :where([data-ds-dark-theme], .mdlb-dark) .mdlb-root,
       .mdlb-root[data-theme="dark"] {
         --mdlb-accent: #96b0ff;
-        --mdlb-dot: rgba(255, 255, 255, .08);
+        --mdlb-dot: rgba(255, 255, 255, .08);  /* 暗底上再亮就发灰，别跟着亮色一起加深 */
         --mdlb-accent-contrast: #0f1115;
         --mdlb-rule-2: color-mix(in srgb, var(--mdlb-ink) 84%, transparent);
       }
 
-      /* ---------- 半调网点：跟随指针的彩色点层 ---------- */
-      .mdlb-dots {
-        /* 必须 sticky 而不是 absolute：整页滚动下 absolute 会跟着内容一起滚走，
-           指针停在原地时那圈蓝点会往上飘。sticky 让点层始终铺满视口 */
+      /* ---------- 半调网点：流动的纸，指针处被橡皮擦掉 ---------- */
+      .mdlb-paper {
+        /* sticky 而不是 absolute：整页滚动下 absolute 会跟着内容滚走，
+           纸应该钉在视口上，只有内容在纸上移动 */
         position: sticky;
         top: 0;
         left: 0;
         flex: none;            /* 父级是 flex 列，不写这行它会被压成 0 高 */
         height: 100vh;
-        margin-bottom: -100vh; /* 不占版面：点层盖住视口，但不把内容推下去 */
+        margin-bottom: -100vh; /* 不占版面：铺满视口，但不把内容推下去 */
         pointer-events: none;
         z-index: 0;
-        background-image: radial-gradient(circle, var(--mdlb-dot-accent) 1px, transparent 1.2px);
-        background-size: 12px 12px;
-        /* 半径 180px 内才透出蓝点，其余被遮住；位置靠 --mx/--my 跟随指针 */
-        -webkit-mask-image: radial-gradient(circle 180px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%);
-        mask-image: radial-gradient(circle 180px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%);
-        opacity: .9;
-        transition: opacity .3s ease;
+        background-image: radial-gradient(circle, var(--mdlb-dot) 2.3px, transparent 2.65px);
+        background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
+        background-position: 0 0;
+        /* 流动：走满一个网格正好 15px，首尾严丝合缝看不出接缝 */
+        animation: mdlb-drift 16s linear infinite;
+        /* 两个 mask 取交集：
+           ① 横向渐变 —— 左端完全透明，右段才浓，这是「左淡右浓」；
+           ② 指针处的洞 —— 中间挖空、外圈渐隐，用 transparent 挖洞而不是把点染色。
+           两组都写在 mask-image 里，靠 mask-composite 求交，不用额外图层 */
+        -webkit-mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%),
+          radial-gradient(circle 150px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 55%, #000 100%);
+        mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%),
+          radial-gradient(circle 150px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 55%, #000 100%);
+        -webkit-mask-composite: source-in;
+        mask-composite: intersect;
       }
-      /* 指针还没进过面板时完全不显示，免得首屏凭空有一块蓝 */
-      .mdlb-dots[data-live="false"] { opacity: 0; }
+      @keyframes mdlb-drift {
+        from { background-position: 0 0; }
+        to { background-position: var(--mdlb-dot-gap) 0; }
+      }
       /* 内容必须在网点之上 */
-      .mdlb-root > *:not(.mdlb-dots):not(style) { position: relative; z-index: 1; }
+      .mdlb-root > *:not(.mdlb-paper):not(style) { position: relative; z-index: 1; }
 
       /* ---------- 刊头 ---------- */
       .mdlb-head {
@@ -959,7 +970,13 @@ window.__ModuleLoader__.load({
         .mdlb-bar > i,
         .mdlb-main,
         .mdlb-table tbody tr,
-        .mdlb-pod { animation: none; }
+        .mdlb-pod,
+        .mdlb-paper { animation: none; }
+        /* 不流动，也不留洞：纸就是一张静止的网点 */
+        .mdlb-paper {
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%);
+          mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%);
+        }
       }
 
       /* ---------- 窄面板（侧栏窄宽） ---------- */
@@ -1869,45 +1886,43 @@ window.__ModuleLoader__.load({
       const rootRef = useRef(null)
       useEffect(() => { if (rootRef.current) rootRef.current.scrollTop = 0 }, [tab])
 
-      /* 网点跟随指针：pointermove 每次都会触发，直接写 style 会让 149 行的表掉帧，
-         所以只记录坐标、用 rAF 合并成每帧最多一次写入；减动效时干脆不跟随 */
-      const dotsRef = useRef(null)
+      /* 指针处的洞：pointermove 触发极密，直接写 style 会让 149 行的表掉帧，
+         所以只记坐标、用 rAF 合并成每帧最多一次写入；减动效时干脆不留洞 */
       const pointerRef = useRef({ x: -1, y: -1, frame: 0 })
       useEffect(() => {
         const root = rootRef.current
-        const layer = dotsRef.current
-        if (!root || !layer) return undefined
+        if (!root) return undefined
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
-        const schedule = () => {
+        const write = () => {
+          pointerRef.current.frame = 0
           const p = pointerRef.current
-          if (!p.frame) {
-            p.frame = window.requestAnimationFrame(() => {
-              p.frame = 0
-              const node = dotsRef.current
-              if (!node || p.x < 0) return
-              node.style.setProperty('--mx', p.x + 'px')
-              node.style.setProperty('--my', p.y + 'px')
-            })
+          if (p.x < 0) {
+            root.style.setProperty('--mdlb-mx', '-9999px')
+            root.style.setProperty('--mdlb-my', '-9999px')
+            return
           }
+          root.style.setProperty('--mdlb-mx', p.x + 'px')
+          root.style.setProperty('--mdlb-my', p.y + 'px')
+        }
+        const schedule = () => {
+          if (!pointerRef.current.frame) pointerRef.current.frame = window.requestAnimationFrame(write)
         }
         const onMove = event => {
           if (reduce.matches) return
-          // 网点层是铺满视口的「纸」（position:absolute 的 offsetParent 是 body，本身不随内容滚动），
-          // 所以坐标必须从它自己的左上角量；再叠加 root.scrollTop 会让蓝点随滚动逐级下坠、脱离指针
-          const box = layer.getBoundingClientRect()
+          /* 洞画在 sticky 的纸上，纸钉在视口上，所以直接用视口坐标；
+             叠加 scrollTop 会让那块空当随滚动越拖越偏 */
+          const box = root.getBoundingClientRect()
           const p = pointerRef.current
           p.x = event.clientX - box.left
           p.y = event.clientY - box.top
-          layer.setAttribute('data-live', 'true')
           schedule()
         }
         const onLeave = () => {
           pointerRef.current.x = -1
-          if (dotsRef.current) dotsRef.current.setAttribute('data-live', 'false')
+          schedule()
         }
         root.addEventListener('pointermove', onMove, { passive: true })
         root.addEventListener('pointerleave', onLeave)
-        if (reduce.matches) layer.setAttribute('data-live', 'false')
         return () => {
           root.removeEventListener('pointermove', onMove)
           root.removeEventListener('pointerleave', onLeave)
@@ -2020,7 +2035,7 @@ window.__ModuleLoader__.load({
 
       return h('div', { className: 'mdlb-root', ref: rootRef },
         h('style', { key: 'mdlb-style' }, CSS),
-        h('div', { key: 'mdlb-dots', className: 'mdlb-dots', 'data-live': 'false', 'aria-hidden': 'true', ref: dotsRef }),
+        h('div', { key: 'mdlb-paper', className: 'mdlb-paper', 'aria-hidden': 'true' }),
         h('div', { className: 'mdlb-head' },
           h('div', { className: 'mdlb-mast' },
             h('h1', { className: 'mdlb-eyebrow' }, t('title')),
