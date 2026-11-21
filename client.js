@@ -702,7 +702,9 @@ window.__ModuleLoader__.load({
         background: none;
       }
 
-      .mdlb-name { display: flex; align-items: center; gap: 6px; min-width: 168px; }
+      /* 加了「发布」列后 11 列在 1240 宽会溢出 18px：模型列不再吃掉全部余量，
+         留 168px 给标签、其余让给数字列，这样表宽自然落在可视区内 */
+      .mdlb-name { display: flex; align-items: center; gap: 6px; min-width: 168px; max-width: 300px; }
       .mdlb-name > a, .mdlb-name > span:not(.mdlb-chip) {
         overflow: hidden; text-overflow: ellipsis; min-width: 0;
       }
@@ -1098,11 +1100,19 @@ window.__ModuleLoader__.load({
       }
 `
 
+    /**
+     * 抓取时间带日期（11-21 15:17）。只给时分的话，隔天再看一眼分不出是
+     * 今天抓的还是昨天抓的 —— 这个面板的价值全在"数据有多新"。
+     */
     function formatTime(iso) {
       if (!iso) return ''
       const d = new Date(iso)
       if (Number.isNaN(d.getTime())) return ''
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+      const mm = String(d.getMonth() + 1).padStart(2, '0')
+      const dd = String(d.getDate()).padStart(2, '0')
+      const hh = String(d.getHours()).padStart(2, '0')
+      const mi = String(d.getMinutes()).padStart(2, '0')
+      return mm + '-' + dd + ' ' + hh + ':' + mi
     }
 
     /** Minutes from a duration cell ("591m 33s", "99m 7s"). */
@@ -1217,24 +1227,29 @@ window.__ModuleLoader__.load({
        every number this panel compares is first normalised to a month. */
     const WEEKS_PER_MONTH = 52 / 12
 
+    /* 单元里没写周期时（旧缓存，或上游哪天删掉了那个 span）按厂商兜底。
+       这 6 家实测是周，其余 15 家是月；兜底宁可显式写死，也不要默认当月把周额度当成月。 */
+    const WEEKLY_PROVIDERS = new Set(['OpenAI', 'Claude', 'Grok', 'Google', 'GLM', 'MiniMax'])
+
     /** 'week' | 'month' | '' from the unit the site prints inside the cell. */
-    function quotaPeriodOf(cell) {
+    function quotaPeriodOf(cell, provider) {
       const unit = String((cell && cell.quotaUnit) || '')
-      if (!unit) return ''
-      return /周/.test(unit) ? 'week' : /月/.test(unit) ? 'month' : ''
+      if (unit) return /周/.test(unit) ? 'week' : /月/.test(unit) ? 'month' : ''
+      if (!provider) return ''
+      return WEEKLY_PROVIDERS.has(provider) ? 'week' : 'month'
     }
 
     /** API-equivalent dollars for the cell, converted to a month like the quota. */
-    function apiMonthUsd(cell) {
+    function apiMonthUsd(cell, provider) {
       const usd = parseNum(cell && cell.api)
       if (usd === null) return null
-      return quotaPeriodOf(cell) === 'week' ? usd * WEEKS_PER_MONTH : usd
+      return quotaPeriodOf(cell, provider) === 'week' ? usd * WEEKS_PER_MONTH : usd
     }
 
     /** A quota cell in 亿 Token per month, plus the period it was quoted in. */
-    function quotaMonthYi(cell) {
+    function quotaMonthYi(cell, provider) {
       const raw = quotaYi(cell && cell.quota)
-      const period = quotaPeriodOf(cell)
+      const period = quotaPeriodOf(cell, provider)
       if (raw === null) return { raw: null, month: null, period }
       return { raw, month: period === 'week' ? raw * WEEKS_PER_MONTH : raw, period }
     }
@@ -1282,14 +1297,14 @@ window.__ModuleLoader__.load({
               if (!cell) continue
               // a row can exist with an empty quota upstream (5 such cells). Dropping it
               // silently under-counts the plan's coverage, so keep it and mark it unknown.
-              const q = quotaMonthYi(cell)
+              const q = quotaMonthYi(cell, section.provider)
               models.push({
                 model: modelName(row.model),
                 quota: q.month,
                 quotaRaw: q.raw,
                 quotaPeriod: q.period,
                 quotaKnown: q.raw !== null,
-                apiNum: apiMonthUsd(cell),
+                apiNum: apiMonthUsd(cell, section.provider),
                 perDollarRaw: cell.perDollar,
                 perDollar: perUnitValue(cell.perDollar, 'USD', { value: RATE_FALLBACK }),
               })
@@ -1560,15 +1575,15 @@ window.__ModuleLoader__.load({
     }
 
     /** One quota matrix cell: the month-normalised figure on top, API value or per-unit below. */
-    function quotaCell(cell, key, { t, currency, rate }) {
-      const q = quotaMonthYi(cell)
+    function quotaCell(cell, key, { t, currency, rate, provider }) {
+      const q = quotaMonthYi(cell, provider)
       // 上游这一格按周给额度时，表里显示折月后的数，原值留在 tooltip
       const note = q.period === 'week'
         ? '上游按周给 ' + cell.quota + '，已按 52/12 折成月'
         : undefined
       const line1 = h('b', null, q.raw === null ? '—' : '≈ ' + formatYi(q.month))
       // 上游有时不写数字而写一句话（「共用月池上限…」）：留在 tooltip，副行退回单位价格
-      const apiUsd = apiMonthUsd(cell)
+      const apiUsd = apiMonthUsd(cell, provider)
       const line2 = apiUsd !== null
         ? h('small', null, t('apiValue', { value: usdText(apiUsd, currency, rate) }))
         : h('small', {
@@ -1652,7 +1667,7 @@ window.__ModuleLoader__.load({
                 )),
                 h('tbody', null, table.rows.map((row, i) => h('tr', { key: row.model, style: { '--i': i } },
                   h('td', { className: 'mdlb-left' }, modelName(row.model)),
-                  ...row.cells.map((cell, j) => quotaCell(cell, j, { t, currency, rate })),
+                  ...row.cells.map((cell, j) => quotaCell(cell, j, { t, currency, rate, provider: name })),
                 ))),
               ),
             ),
@@ -2151,7 +2166,7 @@ window.__ModuleLoader__.load({
                 if (!plan) return
                 const per = parseNum(cell.perDollar)
                 if (per === null) return
-                const q = quotaMonthYi(cell)
+                const q = quotaMonthYi(cell, section.provider)
                 out.push({
                   id: section.provider + '|' + plan.name + '|' + row.model,
                   provider: section.provider,
@@ -2160,7 +2175,7 @@ window.__ModuleLoader__.load({
                   model: modelName(row.model),
                   quota: q.raw === null ? '—' : '≈ ' + formatYi(q.month),
                   quotaPeriod: q.period,
-                  apiNum: apiMonthUsd(cell),
+                  apiNum: apiMonthUsd(cell, section.provider),
                   perDollar: per,
                   perDollarRaw: cell.perDollar,
                 })
@@ -2172,6 +2187,9 @@ window.__ModuleLoader__.load({
       }, [sections])
 
       const body = useMemo(() => {
+        /* 抓取失败且一个数据都没有：不要再摆一块「还没有数据」跟 banner 抢注意力，
+           banner 已经写了失败原因和「重试」。有旧数据（stale）时照常显示表格 */
+        if (active.error && !(payload && payload.data && payload.data.length)) return null
         if (active.loading && !payload) {
           return h('div', { className: 'mdlb-main' },
             h('div', { className: 'mdlb-card' },

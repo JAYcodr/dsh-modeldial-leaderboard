@@ -51,6 +51,9 @@ function parseLeaderboard(html) {
     const tds = [...body.matchAll(/<td\b[^>]*>[\s\S]*?<\/td>/g)].map(x => x[0])
     const nameMatch = body.match(/<a[^>]*class="model-result-link"[^>]*>([\s\S]*?)<\/a>/)
     const effortMatch = body.match(/<span class="effort-label">([\s\S]*?)<\/span>/)
+    // "max · 5 个档位": only 26 of 54 models advertise more than one effort level,
+    // so this stays optional rather than getting a placeholder on every row.
+    const effortCountMatch = body.match(/class="effort-count"[^>]*>([\s\S]*?)<\/span>/)
     const dateMatch = body.match(/<time[^>]*datetime="([^"]+)"/)
     const scores = []
     for (const td of tds) {
@@ -67,6 +70,7 @@ function parseLeaderboard(html) {
       key,
       name,
       effort: effortMatch ? strip(effortMatch[1]) : '',
+      effortCount: effortCountMatch ? (strip(effortCountMatch[1]).match(/(\d+)/) || [])[1] || '' : '',
       released: dateMatch ? dateMatch[1] : '',
       isNew: /model-new-badge/.test(body),
       overall: scores[0] ?? null,
@@ -120,7 +124,7 @@ function parseMultiModel(body) {
     while ((c = cellRe.exec(block)) !== null) {
       const model = strip(c[1])
       // the matrix tables quote quota in 亿, but these rows mix 万 and 亿; normalise to 亿
-      cells.set(model, { quota: toYi(strip(c[2])), api: '', perDollar: '每 $1 ' + strip(c[3]) })
+      cells.set(model, { quota: toYi(strip(c[2])), quotaUnit: '亿 Token/月', api: '', perDollar: '每 $1 ' + strip(c[3]) })
       if (!order.includes(model)) order.push(model)
     }
     perPlan.push(cells)
@@ -158,10 +162,14 @@ function parseQuota(html) {
         for (const td of rowBody.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/g)) {
           const cell = td[1]
           const quota = (cell.match(/__quotaNumber"[^>]*>([\s\S]*?)<\/span>/) || [])[1]
+          // "亿 Token/周" or "亿 Token/月" — the site mixes both across providers, and the
+          // difference is 52/12. Keep it so the panel can normalise instead of guessing.
+          const quotaUnit = (cell.match(/__quotaUnit"[^>]*>([\s\S]*?)<\/span>/) || [])[1]
           const api = (cell.match(/__apiValue"[^>]*>([\s\S]*?)<\/span>/) || [])[1]
           const perDollar = (cell.match(/__value"[^>]*>([\s\S]*?)<\/span>/) || [])[1]
           cells.push({
             quota: quota ? strip(quota) : '',
+            quotaUnit: quotaUnit ? strip(quotaUnit) : '',
             api: api ? strip(api) : '',
             perDollar: perDollar ? strip(perDollar) : '',
           })
@@ -180,6 +188,9 @@ function parseQuota(html) {
 }
 
 const PARSERS = { leaderboard: parseLeaderboard, quota: parseQuota }
+
+/** Exposed so the parsers can be exercised against saved HTML without restarting DSH. */
+export const __test = { parseLeaderboard, parseQuota, toYi }
 
 /** Fetch one upstream page and turn it into the payload the panel renders. */
 async function fetchPayload(key) {
