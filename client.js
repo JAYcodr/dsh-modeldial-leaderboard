@@ -27,6 +27,8 @@ window.__ModuleLoader__.load({
       kpiPlans: 'Plans 套餐',
       kpiModels: 'Models 模型',
       kpiCombos: 'Comparable 可比组合',
+      kpiBoardModels: 'Models 模型',
+      kpiBoardNew: 'New 新模型',
       secTop: '前三名 · 综合分',
       secTopRight: '按 Modeldial 综合轴',
       secAll: '完整榜单',
@@ -130,6 +132,8 @@ window.__ModuleLoader__.load({
       kpiPlans: 'Plans',
       kpiModels: 'Models',
       kpiCombos: 'Comparable combos',
+      kpiBoardModels: 'Models',
+      kpiBoardNew: 'New models',
       secTop: 'Top 3 by overall',
       secTopRight: 'Modeldial overall axis',
       secAll: 'Full ranking',
@@ -275,7 +279,7 @@ window.__ModuleLoader__.load({
         /* 右上角那层蓝点：同一张 15×15 tile，只换 fill。冷暖就来自这层，
            不是靠把点画大或画密 */
         --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
-        --mdlb-dot-blue-color: color-mix(in srgb, var(--mdlb-accent) 22%, transparent);
+        --mdlb-dot-blue-color: color-mix(in srgb, var(--mdlb-accent) 46%, transparent);
         /* 指针不在面板上时把洞推到画布外，等于「没有洞」 */
         --mdlb-mx: -9999px;
         --mdlb-my: -9999px;
@@ -308,7 +312,7 @@ window.__ModuleLoader__.load({
         --mdlb-dot-img: radial-gradient(circle, var(--mdlb-dot) 2px, transparent 2.4px);
         /* 深底上 .42 会过曝，蓝层降到 .20 并换成提亮后的 IKB */
         --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
-        --mdlb-dot-blue-color: color-mix(in srgb, var(--mdlb-accent) 20%, transparent);
+        --mdlb-dot-blue-color: color-mix(in srgb, var(--mdlb-accent) 34%, transparent);
         --mdlb-accent-contrast: #0f1115;
         --mdlb-rule-2: color-mix(in srgb, var(--mdlb-ink) 84%, transparent);
       }
@@ -382,12 +386,14 @@ window.__ModuleLoader__.load({
         background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
         background-position: 0 0;
         animation: mdlb-drift 28s linear infinite;
-        /* 只在右上角一块透出蓝点，往下往左退成灰；洞同样要在这一层挖掉 */
+        /* 只在右上角一块透出蓝点，往下往左退成灰；洞同样要在这一层挖掉。
+           纵向必须收在标题带以下（约 130px）：再往下就是冻结表头和单元格，
+           那里有 10~11px 的小字，蓝点压在灰点上只剩 2.3~3.7:1，读不清 */
         -webkit-mask-image:
-          radial-gradient(ellipse 620px 430px at 100% 0%, #000 0 10%, rgba(0, 0, 0, .5) 38%, transparent 76%),
+          radial-gradient(ellipse 560px 132px at 100% 0%, #000 0 18%, rgba(0, 0, 0, .55) 55%, transparent 100%),
           radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
         mask-image:
-          radial-gradient(ellipse 620px 430px at 100% 0%, #000 0 10%, rgba(0, 0, 0, .5) 38%, transparent 76%),
+          radial-gradient(ellipse 560px 132px at 100% 0%, #000 0 18%, rgba(0, 0, 0, .55) 55%, transparent 100%),
           radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
         -webkit-mask-composite: source-in;
         mask-composite: intersect;
@@ -547,6 +553,11 @@ window.__ModuleLoader__.load({
         display: inline-flex; align-items: center; gap: 6px;
         color: var(--mdlb-ink3); font-size: 11px;
         font-variant-numeric: tabular-nums; letter-spacing: .02em;
+        /* 这行正好落在右上角蓝网点的区域里：蓝点压灰点后，11px 的次级文字
+           只剩 1.8:1。给它一块纸底，点和字各归各位，不必为了字把网点调淡 */
+        background: var(--dsw-alias-bg-base);
+        padding: 3px 7px;
+        margin: -3px -7px;
       }
       .mdlb-time::before {
         content: '';
@@ -1089,6 +1100,10 @@ window.__ModuleLoader__.load({
         /* min-width 必须一起放掉：全局是 168px，只改 max-width 会被它顶住，
            冻结两列会吃掉窄屏一半宽度，分数列反而更难看 */
         .mdlb-table:not([data-wide="true"]) .mdlb-name { min-width: 0; max-width: 180px; }
+        /* 这一档模型列只有 180px，两个胶囊（「新」+「max · 5 档」）要吃掉 80px，
+           名字就只剩 100px 出头、被截成碎片。胶囊在这一档就藏掉，
+           档位数量在宽屏和 tooltip 里都还在 */
+        .mdlb-table:not([data-wide="true"]) .mdlb-name .mdlb-chip { display: none; }
         .mdlb-table:not([data-wide="true"]) tbody tr:nth-child(n) td:nth-child(-n+2) {
           background: var(--dsw-alias-bg-base);
         }
@@ -1577,6 +1592,8 @@ window.__ModuleLoader__.load({
                     href: 'https://modeldial.com/models/' + encodeURIComponent(row.key) + '?axis=overall',
                     target: '_blank',
                     rel: 'noreferrer noopener',
+                    // 窄档模型列只有 150~200px，长名字会被省略号截掉，悬停要能看到全名
+                    title: row.name,
                   }, row.name),
                   row.isNew ? h('span', { className: 'mdlb-chip', 'data-tone': 'new' }, t('newBadge')) : null,
                   row.effort
@@ -2185,6 +2202,13 @@ window.__ModuleLoader__.load({
         combos: entries.reduce((n, e) => n + e.models.filter(m => m.perDollar !== null).length, 0),
       }), [sections, entries])
 
+      /* 榜单页的两格 KPI 不能用额度目录的数字：榜单 54 行、额度侧 28 个模型名，
+         把 28 放在「同屏写着 51 个模型」的榜单上，用户第一眼就以为数据少了。
+         所以按页签取词：榜单说榜单的行数与组合，其余页签说额度目录。 */
+      const kpis = useMemo(() => (tab === 'board'
+        ? [['models', 'kpiBoardModels', boardRows.length], ['fresh', 'kpiBoardNew', boardRows.filter(r => r.isNew).length]]
+        : [['models', 'kpiModels', coverage.models], ['combos', 'kpiCombos', coverage.combos]]), [tab, boardRows, coverage])
+
       const valueRows = useMemo(() => {
         const out = []
         for (const section of sections) {
@@ -2320,11 +2344,10 @@ window.__ModuleLoader__.load({
         ),
         coverage.providers > 0
           ? h('div', { className: 'mdlb-kpis' },
-            [['models', 'kpiModels'], ['combos', 'kpiCombos']]
-              .map(([key, label]) => h('div', { key, className: 'mdlb-kpi' },
-                h('div', { className: 'mdlb-kpi-n' }, String(coverage[key])),
-                h('div', { className: 'mdlb-kpi-l' }, t(label)),
-              )))
+            kpis.map(([key, label, value]) => h('div', { key, className: 'mdlb-kpi' },
+              h('div', { className: 'mdlb-kpi-n' }, String(value)),
+              h('div', { className: 'mdlb-kpi-l' }, t(label)),
+            )))
           : null,
         h(Banner, { t, error: active.error, payload, onRetry: load }),
         // key 跟着页签走：切页时整块重新挂载，.mdlb-main 的入场动效才会重放；
