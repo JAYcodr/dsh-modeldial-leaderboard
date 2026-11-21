@@ -552,7 +552,10 @@ window.__ModuleLoader__.load({
         display: inline-block; min-width: 22px;
         font-variant-numeric: tabular-nums;
         letter-spacing: .06em;
+        transition: color .12s ease;
       }
+      /* hover 只换颜色，不做位移，瑞士版面里行不能跳 */
+      .mdlb-table tbody tr:hover .mdlb-rank span { color: var(--mdlb-accent); }
       .mdlb-rank[data-top="true"] span {
         color: var(--mdlb-accent);
         font-weight: 650;
@@ -622,6 +625,11 @@ window.__ModuleLoader__.load({
       .mdlb-bar > i {
         display: block; height: 100%; border-radius: 0;
         background: var(--mdlb-accent);
+        /* 生长动效：只 transform，不碰 width（inline width 才是真实值） */
+        transform-origin: left center;
+        /* backwards 而不是 both：动画结束就交还原样式，
+           不会留下一个恒等 transform 给整行建 stacking context */
+        animation: mdlb-grow .34s cubic-bezier(.22, 1, .36, 1) backwards;
       }
       .mdlb-main-score { font-weight: 650; }
       .mdlb-main-score .mdlb-bar { width: 50px; height: 4px; }
@@ -867,7 +875,36 @@ window.__ModuleLoader__.load({
       }
       .mdlb-skel-row:last-child { border-bottom: 0; }
       @keyframes mdlb-shimmer { 0%, 100% { opacity: .5; } 50% { opacity: .85; } }
-      @media (prefers-reduced-motion: reduce) { .mdlb-skel { animation: none; opacity: .62; } }
+
+      /* ---------- 微动效：只动 transform / opacity，不动布局 ---------- */
+      @keyframes mdlb-grow {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
+      }
+      @keyframes mdlb-fade {
+        from { opacity: 0; transform: translateY(5px); }
+        /* 收尾必须是 none：留在 translateY(0) 也算一次 transform，
+           会给每行建一层 stacking context，和吸附首列的 z-index 打架 */
+        to { opacity: 1; transform: none; }
+      }
+      /* 页签切换：整块内容淡入，key 变化才重放 */
+      .mdlb-main { animation: mdlb-fade .16s ease-out backwards; }
+      /* 表格行交错入场，第 12 行封顶，54 行不会拖到一秒 */
+      .mdlb-table tbody tr { animation: mdlb-fade .24s ease-out backwards; animation-delay: calc(min(var(--i, 0), 12) * 14ms); }
+      /* 前三名依次入场 */
+      .mdlb-pod { animation: mdlb-fade .22s ease-out backwards; }
+      .mdlb-pod:nth-child(1) { animation-delay: 0ms; }
+      .mdlb-pod:nth-child(2) { animation-delay: 60ms; }
+      .mdlb-pod:nth-child(3) { animation-delay: 120ms; }
+
+      /* 动效全关：偏好减动效时保留最终态（动画 both 的终态就是原样式） */
+      @media (prefers-reduced-motion: reduce) {
+        .mdlb-skel { animation: none; opacity: .62; }
+        .mdlb-bar > i,
+        .mdlb-main,
+        .mdlb-table tbody tr,
+        .mdlb-pod { animation: none; }
+      }
 
       /* ---------- 窄面板（侧栏窄宽） ---------- */
       @media (max-width: 900px) {
@@ -1267,7 +1304,7 @@ window.__ModuleLoader__.load({
                   h('div', { className: 'mdlb-empty' },
                     h('span', { className: 'mdlb-empty-title' }, t('noMatch')),
                     h('span', null, t('noMatchHint')))))
-                : tableRows.map(row => h('tr', { key: row.key },
+                : tableRows.map((row, i) => h('tr', { key: row.key, style: { '--i': i } },
                 h('td', { className: 'mdlb-rank', 'data-top': String(Number(row.rank) <= 3) },
                   h('span', null, row.rank)),
                 h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-name' },
@@ -1345,7 +1382,7 @@ window.__ModuleLoader__.load({
                       t('planPrice', { price: priceText(plan.price, currency, rate) })),
                   ))),
               )),
-              h('tbody', null, table.rows.map(row => h('tr', { key: row.model },
+              h('tbody', null, table.rows.map((row, i) => h('tr', { key: row.model, style: { '--i': i } },
                 h('td', { className: 'mdlb-left' }, row.model),
                 ...row.cells.map((cell, i) => h('td', { key: i },
                   h('div', { className: 'mdlb-cell', title: cell.perDollar ? perUnitText(cell.perDollar, currency, rate) : undefined },
@@ -1397,7 +1434,7 @@ window.__ModuleLoader__.load({
                 h('th', { scope: 'col' }, t('colApi')),
                 h('th', { scope: 'col' }, currency === 'CNY' ? t('colPerYuan') : t('colPerDollar')),
               )),
-              h('tbody', null, filtered.map(row => h('tr', { key: row.id },
+              h('tbody', null, filtered.map((row, i) => h('tr', { key: row.id, style: { '--i': i } },
                 h('td', { className: 'mdlb-left' },
                   h('div', { className: 'mdlb-plan-cell' },
                     h('span', { className: 'mdlb-plan-name' }, row.plan),
@@ -1533,7 +1570,7 @@ window.__ModuleLoader__.load({
                   hasApi ? h('th', { scope: 'col' }, t('colApi')) : null,
                   h('th', { scope: 'col' }, currency === 'CNY' ? t('colPerYuan') : t('colPerDollar')),
                 )),
-                h('tbody', null, rows.map(row => h('tr', { key: row.id },
+                h('tbody', null, rows.map((row, i) => h('tr', { key: row.id, style: { '--i': i } },
                   h('td', { className: 'mdlb-left' }, row.provider),
                   h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-plan-cell' },
                     h('span', { className: 'mdlb-plan-name' }, row.plan),
@@ -1679,7 +1716,7 @@ window.__ModuleLoader__.load({
                   h('th', { scope: 'col', className: 'mdlb-left mdlb-cover-col' }, t('colCover')),
                   usageYi !== null ? h('th', { scope: 'col' }, t('colEnough')) : null,
                 )),
-                h('tbody', null, hits.map(entry => {
+                h('tbody', null, hits.map((entry, i) => {
                   const known = entry.models.filter(m => m.quotaKnown !== false)
                   const unknownCount = entry.models.length - known.length
                   const okCount = usageYi === null ? null : known.filter(m => m.quota / usageYi >= 1).length
@@ -1689,7 +1726,7 @@ window.__ModuleLoader__.load({
                   const ratio = usageYi === null || known.length === 0 ? 0 : okCount / known.length
                   const expanded = open === entry.id
                   return [
-                    h('tr', { key: entry.id },
+                    h('tr', { key: entry.id, style: { '--i': i } },
                       h('td', { className: 'mdlb-left' }, entry.provider),
                       h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-plan-cell' },
                         h('span', { className: 'mdlb-plan-name' }, entry.plan),
@@ -1932,7 +1969,9 @@ window.__ModuleLoader__.load({
               )))
           : null,
         h(Banner, { t, error: active.error, payload, onRetry: load }),
-        body,
+        // key 跟着页签走：切页时整块重新挂载，.mdlb-main 的入场动效才会重放；
+        // 用 Fragment 而不是包一层 div，免得打乱 flex 布局
+        h(React.Fragment, { key: tab }, body),
       )
     }
 
