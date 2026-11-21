@@ -12,7 +12,7 @@ window.__ModuleLoader__.load({
   factory(require) {
     const React = require('react')
     const h = React.createElement
-    const { useCallback, useEffect, useMemo, useState } = React
+    const { useCallback, useEffect, useMemo, useRef, useState } = React
 
     const NS = 'modeldialLeaderboard'
     const PANEL_ID = 'modeldial-leaderboard'
@@ -1825,6 +1825,11 @@ window.__ModuleLoader__.load({
     function Page(props) {
       const t = props && typeof props.t === 'function' ? props.t : translate
       const [tab, setTab] = useState('board')
+      /* 整页滚动后，切页签要把滚动位置回到顶部：否则从性价比往下翻到一半再切回榜单，
+         会落在榜单中部，看不到刊头和前三名（原来内层滚动时这也是同样的问题，
+         只是窗口小、不容易发现） */
+      const rootRef = useRef(null)
+      useEffect(() => { if (rootRef.current) rootRef.current.scrollTop = 0 }, [tab])
       const [modelSort, setModelSort] = useState('best')
       const [currency, setCurrency] = useState('USD')
       const [provider, setProvider] = useState('*')
@@ -1929,7 +1934,7 @@ window.__ModuleLoader__.load({
         return h(QuotaTable, { sections, t, currency, onCurrency: setCurrency, rate })
       }, [active.loading, payload, tab, t, query, boardRows, sections, valueRows, entries, currency, provider, rate])
 
-      return h('div', { className: 'mdlb-root' },
+      return h('div', { className: 'mdlb-root', ref: rootRef },
         h('style', { key: 'mdlb-style' }, CSS),
         h('div', { className: 'mdlb-head' },
           h('div', { className: 'mdlb-mast' },
