@@ -72,7 +72,8 @@ function parseLeaderboard(html) {
       effort: effortMatch ? strip(effortMatch[1]) : '',
       effortCount: effortCountMatch ? (strip(effortCountMatch[1]).match(/(\d+)/) || [])[1] || '' : '',
       released: dateMatch ? dateMatch[1] : '',
-      isNew: /model-new-badge/.test(body),
+      // 上游 54 行每行都带这个 span，只有 8 行没有 hidden；只测 class 名会让全表都挂「新」
+      isNew: /<span class="model-new-badge"(?![^>]*\bhidden\b)/.test(body),
       overall: scores[0] ?? null,
       backend: scores[1] ?? null,
       aesthetic: scores[2] ?? null,
