@@ -262,6 +262,13 @@ window.__ModuleLoader__.load({
            实测 .115 时最浅次级文字压在点像素上只有 4.39:1（差一点点），
            降到 .105 后点像素 #e6e6e6、同一处 4.6:1，视觉上看不出差别 */
         --mdlb-dot: rgba(0, 0, 0, .105);
+        /* 方块网点：15×15 的 SVG tile 里放一个 5×5 的硬边方块。
+           radial-gradient 描不出直角，描边永远带一点圆弧 */
+        --mdlb-dot-img: radial-gradient(circle, var(--mdlb-dot) 2px, transparent 2.4px);
+        /* 右上角那层蓝点：同一张 15×15 tile，只换 fill。冷暖就来自这层，
+           不是靠把点画大或画密 */
+        --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
+        --mdlb-dot-blue-color: color-mix(in srgb, var(--mdlb-accent) 22%, transparent);
         /* 指针不在面板上时把洞推到画布外，等于「没有洞」 */
         --mdlb-mx: -9999px;
         --mdlb-my: -9999px;
@@ -290,6 +297,10 @@ window.__ModuleLoader__.load({
       .mdlb-root[data-theme="dark"] {
         --mdlb-accent: #96b0ff;
         --mdlb-dot: rgba(255, 255, 255, .08);  /* 暗底上再亮就发灰，别跟着亮色一起加深 */
+        --mdlb-dot-img: radial-gradient(circle, var(--mdlb-dot) 2px, transparent 2.4px);
+        /* 深底上 .42 会过曝，蓝层降到 .20 并换成提亮后的 IKB */
+        --mdlb-dot-blue: radial-gradient(circle, var(--mdlb-dot-blue-color) 2px, transparent 2.4px);
+        --mdlb-dot-blue-color: color-mix(in srgb, var(--mdlb-accent) 20%, transparent);
         --mdlb-accent-contrast: #0f1115;
         --mdlb-rule-2: color-mix(in srgb, var(--mdlb-ink) 84%, transparent);
       }
@@ -304,9 +315,12 @@ window.__ModuleLoader__.load({
         flex: none;            /* 父级是 flex 列，不写这行它会被压成 0 高 */
         height: 100vh;
         margin-bottom: -100vh; /* 不占版面：铺满视口，但不把内容推下去 */
+        /* 横向吃进 root 的左右 padding：否则最右侧 32px 会是一条纯白，
+           而那里恰好是渐变最浓的地方。root 有 overflow-x:hidden，不会撑出滚动条 */
+        margin-inline: calc(var(--mdlb-pad-x) * -1);
         pointer-events: none;
         z-index: 0;
-        background-image: radial-gradient(circle, var(--mdlb-dot) 2.3px, transparent 2.65px);
+        background-image: var(--mdlb-dot-img);
         background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
         background-position: 0 0;
         /* 流动：走满一个网格正好 15px，首尾严丝合缝看不出接缝 */
@@ -316,11 +330,32 @@ window.__ModuleLoader__.load({
            ② 指针处的洞 —— 中间挖空、外圈渐隐，用 transparent 挖洞而不是把点染色。
            两组都写在 mask-image 里，靠 mask-composite 求交，不用额外图层 */
         -webkit-mask-image:
-          linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%),
-          radial-gradient(circle 150px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 55%, #000 100%);
+          linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%),
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
         mask-image:
-          linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .30) 18%, rgba(0, 0, 0, .62) 55%, rgba(0, 0, 0, .92) 100%),
-          radial-gradient(circle 150px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 55%, #000 100%);
+          linear-gradient(to top right, transparent 0 46%, rgba(0, 0, 0, .22) 60%, rgba(0, 0, 0, .62) 78%, #000 95%),
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
+        -webkit-mask-composite: source-in;
+        mask-composite: intersect;
+      }
+      /* 蓝层：同一张 tile、同一节奏，只换 fill。两层必须共用 gap/position/animation，
+         否则点和点会错开半格，看起来像麻子 */
+      .mdlb-paper::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: var(--mdlb-dot-blue);
+        background-size: var(--mdlb-dot-gap) var(--mdlb-dot-gap);
+        background-position: 0 0;
+        animation: mdlb-drift 16s linear infinite;
+        /* 只在右上角一块透出蓝点，往下往左退成灰；洞同样要在这一层挖掉 */
+        -webkit-mask-image:
+          radial-gradient(ellipse 620px 430px at 100% 0%, #000 0 10%, rgba(0, 0, 0, .5) 38%, transparent 76%),
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
+        mask-image:
+          radial-gradient(ellipse 620px 430px at 100% 0%, #000 0 10%, rgba(0, 0, 0, .5) 38%, transparent 76%),
+          radial-gradient(circle 90px at var(--mdlb-mx) var(--mdlb-my), transparent 0, transparent 45%, #000 100%);
         -webkit-mask-composite: source-in;
         mask-composite: intersect;
       }
