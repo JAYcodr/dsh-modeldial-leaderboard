@@ -235,7 +235,7 @@ window.__ModuleLoader__.load({
       .mdlb-root {
         --mdlb-ink: var(--dsw-alias-label-primary);
         --mdlb-ink2: var(--dsw-alias-label-secondary);
-        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 82%, var(--dsw-alias-label-primary));
+        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 80%, var(--dsw-alias-label-primary));
         --mdlb-accent: #002fa7;
         --mdlb-accent-contrast: #ffffff;
         --mdlb-rule: color-mix(in srgb, var(--mdlb-ink) 11%, transparent);
@@ -255,6 +255,13 @@ window.__ModuleLoader__.load({
         --mdlb-line-strong: var(--mdlb-rule-w);
         --mdlb-text-faint: var(--mdlb-ink3);
         --mdlb-skel-bg: color-mix(in srgb, var(--mdlb-ink) 10%, transparent);
+        /* 半调网点：零字节的网格纸，点距 12px、半径 1px */
+        --mdlb-pad-x: 32px;
+        /* 点色不能太深：ink3 小字压在点的像素上时，对比度会被底色吃掉
+           （alpha .13 时 ink3 只有 3.7:1）。.06 让 dot 像素落在 #f0f0f0，
+           最浅的次级文字仍有 4.5:1 */
+        --mdlb-dot: rgba(0, 0, 0, .06);
+        --mdlb-dot-accent: var(--mdlb-accent);
 
         display: flex;
         flex-direction: column;
@@ -269,7 +276,12 @@ window.__ModuleLoader__.load({
         padding: 0 32px 20px;
         box-sizing: border-box;
         color: var(--mdlb-ink);
-        background: var(--dsw-alias-bg-base);
+        /* background-attachment 用默认的 scroll：在滚动容器里这意味着网点钉在这层框上、
+           不跟着内容走。网点是纸，内容是纸上的印刷品 */
+        background-color: var(--dsw-alias-bg-base);
+        background-image: radial-gradient(circle, var(--mdlb-dot) 1px, transparent 1.2px);
+        background-size: 12px 12px;
+        background-position: 0 0;
         font-size: 13px;
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
@@ -278,9 +290,35 @@ window.__ModuleLoader__.load({
       :where([data-ds-dark-theme], .mdlb-dark) .mdlb-root,
       .mdlb-root[data-theme="dark"] {
         --mdlb-accent: #96b0ff;
+        --mdlb-dot: rgba(255, 255, 255, .06);
         --mdlb-accent-contrast: #0f1115;
         --mdlb-rule-2: color-mix(in srgb, var(--mdlb-ink) 84%, transparent);
       }
+
+      /* ---------- 半调网点：跟随指针的彩色点层 ---------- */
+      .mdlb-dots {
+        /* 必须 sticky 而不是 absolute：整页滚动下 absolute 会跟着内容一起滚走，
+           指针停在原地时那圈蓝点会往上飘。sticky 让点层始终铺满视口 */
+        position: sticky;
+        top: 0;
+        left: 0;
+        flex: none;            /* 父级是 flex 列，不写这行它会被压成 0 高 */
+        height: 100vh;
+        margin-bottom: -100vh; /* 不占版面：点层盖住视口，但不把内容推下去 */
+        pointer-events: none;
+        z-index: 0;
+        background-image: radial-gradient(circle, var(--mdlb-dot-accent) 1px, transparent 1.2px);
+        background-size: 12px 12px;
+        /* 半径 180px 内才透出蓝点，其余被遮住；位置靠 --mx/--my 跟随指针 */
+        -webkit-mask-image: radial-gradient(circle 180px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%);
+        mask-image: radial-gradient(circle 180px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%);
+        opacity: .9;
+        transition: opacity .3s ease;
+      }
+      /* 指针还没进过面板时完全不显示，免得首屏凭空有一块蓝 */
+      .mdlb-dots[data-live="false"] { opacity: 0; }
+      /* 内容必须在网点之上 */
+      .mdlb-root > *:not(.mdlb-dots):not(style) { position: relative; z-index: 1; }
 
       /* ---------- 刊头 ---------- */
       .mdlb-head {
@@ -1830,6 +1868,52 @@ window.__ModuleLoader__.load({
          只是窗口小、不容易发现） */
       const rootRef = useRef(null)
       useEffect(() => { if (rootRef.current) rootRef.current.scrollTop = 0 }, [tab])
+
+      /* 网点跟随指针：pointermove 每次都会触发，直接写 style 会让 149 行的表掉帧，
+         所以只记录坐标、用 rAF 合并成每帧最多一次写入；减动效时干脆不跟随 */
+      const dotsRef = useRef(null)
+      const pointerRef = useRef({ x: -1, y: -1, frame: 0 })
+      useEffect(() => {
+        const root = rootRef.current
+        const layer = dotsRef.current
+        if (!root || !layer) return undefined
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const schedule = () => {
+          const p = pointerRef.current
+          if (!p.frame) {
+            p.frame = window.requestAnimationFrame(() => {
+              p.frame = 0
+              const node = dotsRef.current
+              if (!node || p.x < 0) return
+              node.style.setProperty('--mx', p.x + 'px')
+              node.style.setProperty('--my', p.y + 'px')
+            })
+          }
+        }
+        const onMove = event => {
+          if (reduce.matches) return
+          // 网点层是铺满视口的「纸」（position:absolute 的 offsetParent 是 body，本身不随内容滚动），
+          // 所以坐标必须从它自己的左上角量；再叠加 root.scrollTop 会让蓝点随滚动逐级下坠、脱离指针
+          const box = layer.getBoundingClientRect()
+          const p = pointerRef.current
+          p.x = event.clientX - box.left
+          p.y = event.clientY - box.top
+          layer.setAttribute('data-live', 'true')
+          schedule()
+        }
+        const onLeave = () => {
+          pointerRef.current.x = -1
+          if (dotsRef.current) dotsRef.current.setAttribute('data-live', 'false')
+        }
+        root.addEventListener('pointermove', onMove, { passive: true })
+        root.addEventListener('pointerleave', onLeave)
+        if (reduce.matches) layer.setAttribute('data-live', 'false')
+        return () => {
+          root.removeEventListener('pointermove', onMove)
+          root.removeEventListener('pointerleave', onLeave)
+          if (pointerRef.current.frame) window.cancelAnimationFrame(pointerRef.current.frame)
+        }
+      }, [])
       const [modelSort, setModelSort] = useState('best')
       const [currency, setCurrency] = useState('USD')
       const [provider, setProvider] = useState('*')
@@ -1936,6 +2020,7 @@ window.__ModuleLoader__.load({
 
       return h('div', { className: 'mdlb-root', ref: rootRef },
         h('style', { key: 'mdlb-style' }, CSS),
+        h('div', { key: 'mdlb-dots', className: 'mdlb-dots', 'data-live': 'false', 'aria-hidden': 'true', ref: dotsRef }),
         h('div', { className: 'mdlb-head' },
           h('div', { className: 'mdlb-mast' },
             h('h1', { className: 'mdlb-eyebrow' }, t('title')),
