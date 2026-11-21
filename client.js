@@ -260,7 +260,13 @@ window.__ModuleLoader__.load({
         flex-direction: column;
         height: 100%;
         min-height: 0;
-        padding: 26px 32px 20px;
+        /* 整页滚动：这里自己就是滚动容器，刊头、KPI、页签都跟着一起滚走，
+           不再只有底部表格那一小块在内层滚 */
+        overflow-y: auto;
+        overflow-x: hidden;
+        /* 上内边距必须为 0：滚动容器带 padding-top 时，吸附表头会往下粘 26px，
+           上方留出一条露出表格行的缝。顶部留白改由 .mdlb-head 自己的 padding 承担 */
+        padding: 0 32px 20px;
         box-sizing: border-box;
         color: var(--mdlb-ink);
         background: var(--dsw-alias-bg-base);
@@ -282,7 +288,7 @@ window.__ModuleLoader__.load({
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: start;
         gap: 24px;
-        padding-bottom: 14px;
+        padding: 26px 0 14px;
         border-bottom: 2px solid var(--mdlb-rule-2);
       }
       .mdlb-eyebrow {
@@ -479,14 +485,16 @@ window.__ModuleLoader__.load({
 
       /* ---------- 主区：去掉卡片外壳 ---------- */
       .mdlb-main {
-        flex: 1; min-height: 0; display: flex; flex-direction: column;
+        flex: 0 0 auto; display: flex; flex-direction: column;
         margin-top: 0;
+        min-height: 0;
       }
+      /* 卡片外壳已经不存在了：不再设高度，内容撑多高就多高 */
       .mdlb-card {
-        flex: 1; min-height: 0; display: flex; flex-direction: column;
+        flex: 0 0 auto; display: flex; flex-direction: column;
         border: 0; border-radius: 0;
         background: none;
-        overflow: hidden;
+        overflow: visible;
         box-shadow: none;
       }
       .mdlb-card-top {
@@ -496,13 +504,23 @@ window.__ModuleLoader__.load({
         border-bottom: 1px solid var(--mdlb-rule);
         background: none;
       }
-      .mdlb-body { flex: 1; min-height: 0; overflow: auto; }
+      /* 表格区只负责横向滚动。纵向必须是 clip：auto/hidden 会变成新的滚动容器，
+         表头的 position:sticky 就绑到它身上、滚出视野就消失 */
+      .mdlb-body {
+        flex: 0 0 auto;
+        overflow-x: auto;
+        overflow-y: clip;
+      }
+      .mdlb-root::-webkit-scrollbar,
       .mdlb-body::-webkit-scrollbar { width: 9px; height: 9px; }
+      .mdlb-root::-webkit-scrollbar-thumb,
       .mdlb-body::-webkit-scrollbar-thumb {
         background: color-mix(in srgb, var(--mdlb-ink) 20%, transparent);
         border-radius: 0;
         border: 3px solid var(--dsw-alias-bg-base);
       }
+      .mdlb-root::-webkit-scrollbar-track,
+      .mdlb-body::-webkit-scrollbar-track { background: transparent; }
 
       /* ---------- 表格：发丝线 + 数字右对齐 ---------- */
       .mdlb-table {
