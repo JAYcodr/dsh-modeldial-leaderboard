@@ -72,7 +72,7 @@ ln -s "<插件目录>" ~/.dsh/profiles/<profile>/node_modules/@local/modeldial-l
 
 ## 许可
 
-目前未附带 LICENSE 文件，默认保留所有权利。
+MIT，见 [LICENSE](LICENSE)。可以自由使用、修改、分发，保留版权声明即可。
 
 ## 卸载
 

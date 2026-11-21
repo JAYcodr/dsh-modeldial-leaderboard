@@ -1,6 +1,7 @@
 {
   "name": "@local/modeldial-leaderboard",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "description": "Modeldial coding leaderboard panel for the DSH web GUI",
