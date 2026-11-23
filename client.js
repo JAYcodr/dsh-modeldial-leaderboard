@@ -611,21 +611,37 @@ window.__ModuleLoader__.load({
         border-bottom: 1px solid var(--mdlb-rule);
       }
       .mdlb-pod {
-        padding: 14px 16px 15px 0;
+        display: flex;
+        flex-direction: column;
+        padding: 15px 20px 16px 0;
         border-right: 1px solid var(--mdlb-rule);
         min-width: 0;
       }
-      .mdlb-pod:nth-child(3n) { border-right: 0; }
+      .mdlb-pod:nth-child(3n) { border-right: 0; padding-right: 0; }
       .mdlb-pod:nth-child(n+4) { border-top: 1px solid var(--mdlb-rule); }
-      .mdlb-pod:not(:first-child) { padding-left: 16px; }
+      .mdlb-pod:not(:first-child) { padding-left: 20px; }
+      .mdlb-pod-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 20px;
+      }
       .mdlb-pod-no {
         font-size: 11.5px; letter-spacing: .12em; color: var(--mdlb-ink3);
         font-variant-numeric: tabular-nums;
       }
       .mdlb-pod[data-top="true"] .mdlb-pod-no { color: var(--mdlb-accent); font-weight: 650; }
+      .mdlb-pod-badges {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: flex-end;
+      }
       .mdlb-pod-name {
-        margin: 5px 0 0;
-        font-size: 15.5px; font-weight: 560; letter-spacing: -.01em;
+        margin: 6px 0 0;
+        font-size: 16px; font-weight: 580; letter-spacing: -.01em;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
       .mdlb-pod-name a { color: inherit; text-decoration: none; }
@@ -636,11 +652,51 @@ window.__ModuleLoader__.load({
         font-variant-numeric: tabular-nums;
       }
       .mdlb-pod-score b {
-        font-size: 30px; font-weight: 450; letter-spacing: -.04em; line-height: 1;
+        font-size: 32px; font-weight: 450; letter-spacing: -.04em; line-height: 1;
       }
       .mdlb-pod[data-top="true"] .mdlb-pod-score b { font-size: 38px; }
       .mdlb-pod-unit { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--mdlb-ink3); }
-      .mdlb-pod-score .mdlb-bar { width: 100%; height: 2px; margin-top: 4px; flex-basis: 100%; }
+      .mdlb-pod-score .mdlb-bar { width: 100%; height: 2px; margin-top: 5px; flex-basis: 100%; }
+      .mdlb-pod-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px 18px;
+        margin-top: 12px;
+        padding-top: 11px;
+        border-top: 1px solid var(--mdlb-rule);
+      }
+      .mdlb-pod-m {
+        display: grid;
+        grid-template-columns: minmax(0, 64px) minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 7px;
+        font-size: 11.5px;
+        color: var(--mdlb-ink2);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-pod-m > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mdlb-pod-m .mdlb-bar { width: 100%; height: 2px; }
+      .mdlb-pod-m > b {
+        font-weight: 560;
+        color: var(--mdlb-ink);
+        font-size: 12px;
+      }
+      .mdlb-pod-foot {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        margin-top: auto;
+        padding-top: 10px;
+        font-size: 11.5px;
+        color: var(--mdlb-ink3);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-pod-foot > span { white-space: nowrap; }
       .mdlb-pod-meta {
         display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
         margin-top: 8px; font-size: 11.5px; color: var(--mdlb-ink3);
@@ -753,8 +809,8 @@ window.__ModuleLoader__.load({
         box-shadow: none;
       }
       .mdlb-card-top {
-        display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-        gap: 8px 16px;
+        display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+        gap: 10px 18px;
         padding: 12px 0 11px;
         border-bottom: 1px solid var(--mdlb-rule);
         background: none;
@@ -946,28 +1002,59 @@ window.__ModuleLoader__.load({
          旧的空态结构不动（仍是原来的短横线），只在这里收口 */
       .mdlb-empty--board { max-width: none; padding-top: 34px; }
 
-      /* 厂商切换：底部下划线的高亮标签 */
+      /* 厂商切换：零圆角瑞士分格标签，「全部」与具体厂商用竖发丝线隔开，带数量角标 */
       .mdlb-providers {
-        display: flex; flex-wrap: wrap; gap: 2px 16px;
+        display: flex; flex-wrap: wrap; align-items: center;
+        gap: 6px;
         margin: 0;
-        padding-bottom: 1px;
+      }
+      .mdlb-providers-sep {
+        width: 1px;
+        height: 18px;
+        background: var(--mdlb-rule-w);
+        margin: 0 2px;
+        flex: none;
       }
       .mdlb-provider {
         appearance: none; cursor: pointer; font: inherit;
-        font-size: 12.5px; letter-spacing: .01em;
-        padding: 3px 0 7px;
-        border: 0; border-radius: 0;
-        border-bottom: 2px solid transparent;
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 12px; line-height: 1.35; letter-spacing: .01em;
+        padding: 4px 9px;
+        border: 1px solid var(--mdlb-rule);
+        border-radius: 0;
         color: var(--mdlb-ink2);
-        background: transparent;
-        transition: color .12s ease, border-color .12s ease;
+        background: color-mix(in srgb, var(--mdlb-ink) 2%, transparent);
+        transition: color .12s ease, border-color .12s ease, background .12s ease;
       }
-      .mdlb-provider:hover { color: var(--mdlb-ink); border-bottom-color: var(--mdlb-rule-w); }
+      .mdlb-provider:hover {
+        color: var(--mdlb-ink);
+        border-color: var(--mdlb-rule-w);
+        background: var(--mdlb-wash);
+      }
       .mdlb-provider[data-active="true"] {
         color: var(--mdlb-accent);
-        font-weight: 650;
-        border-bottom-color: var(--mdlb-accent);
-        background: none;
+        font-weight: 620;
+        border-color: var(--mdlb-accent);
+        background: var(--mdlb-accent-wash);
+      }
+      .mdlb-provider[data-all="true"] {
+        font-weight: 580;
+        color: var(--mdlb-ink);
+        border-color: var(--mdlb-rule-w);
+      }
+      .mdlb-provider[data-all="true"][data-active="true"] {
+        color: var(--mdlb-accent);
+        border-color: var(--mdlb-accent);
+      }
+      .mdlb-provider-n {
+        font-size: 10.5px;
+        font-variant-numeric: tabular-nums;
+        color: var(--mdlb-ink3);
+        font-weight: 500;
+      }
+      .mdlb-provider[data-active="true"] .mdlb-provider-n {
+        color: var(--mdlb-accent);
+        opacity: .85;
       }
       .mdlb-caption {
         color: var(--mdlb-ink3); font-size: 11.5px; margin: 0;
@@ -999,6 +1086,7 @@ window.__ModuleLoader__.load({
         display: flex; flex-wrap: wrap; align-items: center;
         gap: 6px; min-width: 0;
       }
+      .mdlb-toolbar-left:has(.mdlb-providers) { flex: 1 1 540px; }
       .mdlb-count {
         color: var(--mdlb-ink3); font-size: 12px;
         font-variant-numeric: tabular-nums; white-space: nowrap;
@@ -1228,10 +1316,14 @@ window.__ModuleLoader__.load({
       @container (max-width: 780px) {
         .mdlb-axis-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
-      /* 宽面板下给模型列一个上限比例：6 列的表在 1600 会把它撑到 620px，
-         数字被推得太散；30% 让三列分数自己分掉余量 */
+      /* 高分宽屏下模型列只按内容（上限 300px）收缩，不再把多出来的几百像素全吃成空白 */
       @container (min-width: 940px) {
-        .mdlb-table--axes th:nth-child(2) { width: 30%; }
+        .mdlb-table:not([data-wide="true"]) th:nth-child(2),
+        .mdlb-table:not([data-wide="true"]) td:nth-child(2) { width: 1%; }
+        .mdlb-table--axes th:nth-child(2),
+        .mdlb-table--axes td:nth-child(2) { width: 1%; min-width: 240px; }
+        .mdlb-quota-block .mdlb-table th:first-child,
+        .mdlb-quota-block .mdlb-table td:first-child { width: 1%; min-width: 240px; }
       }
       .mdlb-axis-rule { grid-column: 1 / -1; height: 1px; background: var(--mdlb-rule); margin: 4px 0 2px; }
       .mdlb-axis {
@@ -1365,6 +1457,9 @@ window.__ModuleLoader__.load({
         .mdlb-pod-score b, .mdlb-pod[data-top="true"] .mdlb-pod-score b { font-size: 24px; }
         .mdlb-pod-unit { display: none; }
         .mdlb-pod-detail { display: none; }
+        .mdlb-pod-metrics { display: none; }
+        .mdlb-pod-foot { display: none; }
+        .mdlb-pod-badges { display: none; }
         .mdlb-sec .mdlb-sec-rt { display: none; }
         /* 窄面板：模型列里那个档位胶囊（max · 5 档）占 80px 左右，
            它一在，模型名就只剩 "GPT..." 这种碎片。窄屏把它藏掉，
@@ -1765,27 +1860,67 @@ window.__ModuleLoader__.load({
       return key === 'model' ? row.name : row[key]
     }
 
-    /** 前三名的大字报：模型名 + 综合分。固定按排名取，不跟随表格排序。 */
+    /** 前三名卡片骨架：编程 / 文本 / Harness 共用一套结构，避免大字报留白过空。 */
+    function PodiumCard({ row, top, href, overallDigits, t, badges, metrics, footer }) {
+      const hasBadges = badges && badges.some(Boolean)
+      const hasMetrics = metrics && metrics.length > 0
+      const hasFooter = footer && footer.length > 0
+      return h('div', { key: row.key, className: 'mdlb-pod', 'data-top': String(top) },
+        h('div', { className: 'mdlb-pod-head' },
+          h('div', { className: 'mdlb-pod-no' }, String(row.rank).padStart(2, '0')),
+          hasBadges ? h('div', { className: 'mdlb-pod-badges' }, badges) : null,
+        ),
+        h('div', { className: 'mdlb-pod-name' }, href
+          ? h('a', { href, target: '_blank', rel: 'noreferrer noopener', title: row.name }, row.name)
+          : h('span', { title: row.name }, row.name)),
+        h('div', { className: 'mdlb-pod-score' },
+          h('b', null, formatScore(row.overall, overallDigits)),
+          h('span', { className: 'mdlb-pod-unit' }, t('colOverall')),
+          h('i', { className: 'mdlb-bar' }, h('i', { style: { width: percent(row.overall) } }))),
+        hasMetrics
+          ? h('div', { className: 'mdlb-pod-metrics' },
+            metrics.map(item => h('div', { key: item.label, className: 'mdlb-pod-m' },
+              h('span', { title: item.label }, item.label),
+              h('i', { className: 'mdlb-bar', 'data-tone': tone(item.score) },
+                h('i', { style: { width: percent(item.score) } })),
+              h('b', null, item.value),
+            )))
+          : null,
+        hasFooter
+          ? h('div', { className: 'mdlb-pod-foot' },
+            footer.map((item, idx) => h('span', { key: idx }, item)))
+          : null,
+      )
+    }
+
+    /** 前三名的大字报：模型名 + 综合分 + 五维明细与评测规格。固定按排名取，不跟随表格排序。 */
     function Podium({ rows, t }) {
       const top = rows.slice(0, 3)
       if (top.length === 0) return null
       return h('div', { className: 'mdlb-podium' },
-        top.map((row, i) => h('div', { key: row.key, className: 'mdlb-pod', 'data-top': String(i < 3) },
-          h('div', { className: 'mdlb-pod-no' }, String(row.rank).padStart(2, '0')),
-          h('div', { className: 'mdlb-pod-name' }, h('a', {
-            href: 'https://modeldial.com/models/' + encodeURIComponent(row.key) + '?axis=overall',
-            target: '_blank', rel: 'noreferrer noopener',
-          }, row.name)),
-          h('div', { className: 'mdlb-pod-score' },
-            h('b', null, formatScore(row.overall)),
-            h('span', { className: 'mdlb-pod-unit' }, t('colOverall')),
-            h('i', { className: 'mdlb-bar' }, h('i', { style: { width: `${Math.max(0, Math.min(100, row.overall || 0))}%` } }))),
-          h('div', { className: 'mdlb-pod-meta' },
-            row.isNew ? h('span', { className: 'mdlb-chip', 'data-tone': 'new' }, t('newBadge')) : null,
-            row.effort ? h('span', { className: 'mdlb-chip' }, row.effort) : null,
-            h('span', { className: 'mdlb-pod-detail' }, t('colKnowledge') + ' ' + formatScore(row.knowledge)),
-          ),
-        )))
+        top.map((row, i) => h(PodiumCard, {
+          key: row.key,
+          row,
+          top: i < 3,
+          href: 'https://modeldial.com/models/' + encodeURIComponent(row.key) + '?axis=overall',
+          t,
+          badges: [
+            row.isNew ? h('span', { key: 'new', className: 'mdlb-chip', 'data-tone': 'new' }, t('newBadge')) : null,
+            row.effort
+              ? h('span', { key: 'eff', className: 'mdlb-chip' }, row.effort + (row.effortCount ? ' · ' + row.effortCount + ' 档' : ''))
+              : null,
+          ],
+          metrics: SCORE_COLUMNS.slice(1).map(([key, label]) => ({
+            label: t(label),
+            score: row[key],
+            value: formatScore(row[key]),
+          })),
+          footer: [
+            row.duration || null,
+            row.cost || null,
+            row.released ? t('colReleased') + ' ' + row.released.slice(5) : null,
+          ].filter(Boolean),
+        })))
     }
 
     function LeaderboardTable({ rows, t, query, onQuery }) {
@@ -1870,32 +2005,28 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 新榜（文本 / Harness）的大字报：同一套版式，链接与副信息按榜单换。 */
-    function BoardPodium({ rows, t, href, detail, digits }) {
+    /** 新榜（文本 / Harness）的大字报：同一套版式，链接与维次指标按榜单换。 */
+    function BoardPodium({ rows, t, href, podiumMetrics, digits }) {
       const top = rows.slice(0, 3)
       if (top.length === 0) return null
       return h('div', { className: 'mdlb-podium' },
-        top.map(row => h('div', { key: row.key, className: 'mdlb-pod', 'data-top': 'true' },
-          h('div', { className: 'mdlb-pod-no' }, String(row.rank).padStart(2, '0')),
-          h('div', { className: 'mdlb-pod-name' }, href
-            ? h('a', { href: href(row), target: '_blank', rel: 'noreferrer noopener' }, row.name)
-            : h('span', { title: row.name }, row.name)),
-          h('div', { className: 'mdlb-pod-score' },
-            h('b', null, formatScore(row.overall, digits)),
-            h('span', { className: 'mdlb-pod-unit' }, t('colOverall')),
-            h('i', { className: 'mdlb-bar' }, h('i', { style: { width: percent(row.overall) } }))),
-          h('div', { className: 'mdlb-pod-meta' },
-            row.effort ? h('span', { className: 'mdlb-chip' }, row.effort) : null,
-            h('span', { className: 'mdlb-pod-detail' }, detail(row)),
-          ),
-        )))
+        top.map(row => h(PodiumCard, {
+          key: row.key,
+          row,
+          top: true,
+          href: href ? href(row) : null,
+          overallDigits: digits,
+          t,
+          badges: row.effort ? [h('span', { key: 'eff', className: 'mdlb-chip' }, row.effort)] : null,
+          metrics: podiumMetrics ? podiumMetrics(row) : [],
+        })))
     }
 
     /**
      * 文本榜 / Harness 榜共用的排名表：前三名大字报、第 4 名起进表格、表头排序、
      * 搜索，加上每行可展开的 8 个维度。列定义由调用方给，渲染规则与编程榜一致。
      */
-    function BoardTable({ rows, columns, t, query, onQuery, href, podium, axes, digits, countLabel, topRight, nameLabel, searchPlaceholder, noMatchLabel, axisGroup = 0 }) {
+    function BoardTable({ rows, columns, t, query, onQuery, href, podiumMetrics, axes, digits, countLabel, topRight, nameLabel, searchPlaceholder, noMatchLabel, axisGroup = 0 }) {
       const { sort, onSort, sorted } = useRankSort(rows, boardPick)
       const [open, setOpen] = useState(null)
       // 默认视图：前三名上大字报，表格从第 4 名开始；一旦排序或搜索，大字报让位给全量表格
@@ -1909,7 +2040,7 @@ window.__ModuleLoader__.load({
 
       return h('div', { className: 'mdlb-main' },
         sortedOrFiltered ? null : h(SectionBar, { no: '01', title: t('secTop'), right: topRight }),
-        sortedOrFiltered ? null : h(BoardPodium, { rows: topThree, t, href, detail: podium, digits }),
+        sortedOrFiltered ? null : h(BoardPodium, { rows: topThree, t, href, podiumMetrics, digits }),
         h(SectionBar, {
           no: sortedOrFiltered ? '01' : '02',
           title: sortedOrFiltered ? t('secAll') : t('secRest'),
@@ -2027,10 +2158,34 @@ window.__ModuleLoader__.load({
         }, line1, line2))
     }
 
+    /** 厂商切换条：「全部」与具体厂商用竖线分开，每一项自成矩形微框并标明条目数。 */
+    function ProviderBar({ items, active, allLabel, allCount, onSelect }) {
+      return h('div', { className: 'mdlb-providers' },
+        h('button', {
+          key: '*',
+          className: 'mdlb-provider',
+          'data-all': 'true',
+          'data-active': String(active === '*'),
+          onClick: () => onSelect('*'),
+        }, h('span', null, allLabel), h('span', { className: 'mdlb-provider-n' }, String(allCount))),
+        h('span', { key: '__sep__', className: 'mdlb-providers-sep', 'aria-hidden': 'true' }),
+        items.map(item => h('button', {
+          key: item.name,
+          className: 'mdlb-provider',
+          'data-active': String(active === item.name),
+          onClick: () => onSelect(item.name),
+        }, h('span', null, item.name), h('span', { className: 'mdlb-provider-n' }, String(item.count)))),
+      )
+    }
+
     function QuotaTable({ sections, t, currency, onCurrency, rate }) {
       // 默认停在「全部」：KPI 说 68 个套餐，只显示一家、7 行，数字和表对不上
       const [provider, setProvider] = useState('*')
       const allPlans = useMemo(() => sections.reduce((n, s) => n + s.tables.reduce((m, tb) => m + tb.plans.length, 0), 0), [sections])
+      const providerItems = useMemo(() => sections.map(s => ({
+        name: s.provider,
+        count: s.tables.reduce((m, tb) => m + tb.plans.length, 0),
+      })), [sections])
       const current = useMemo(() => {
         if (sections.length === 0) return null
         if (provider === '*') return null
@@ -2050,20 +2205,13 @@ window.__ModuleLoader__.load({
         h('div', { className: 'mdlb-card' },
           h('div', { className: 'mdlb-card-top' },
             h('div', { className: 'mdlb-toolbar-left' },
-              h('div', { className: 'mdlb-providers' },
-                h('button', {
-                  key: '*',
-                  className: 'mdlb-provider',
-                  'data-active': String(provider === '*'),
-                  onClick: () => setProvider('*'),
-                }, t('allProviders') + ' · ' + allPlans),
-                sections.map(s => h('button', {
-                  key: s.provider,
-                  className: 'mdlb-provider',
-                  'data-active': String(provider === s.provider),
-                  onClick: () => setProvider(s.provider),
-                }, s.provider)),
-              ),
+              h(ProviderBar, {
+                items: providerItems,
+                active: provider,
+                allLabel: t('allProviders'),
+                allCount: allPlans,
+                onSelect: setProvider,
+              }),
             ),
             h('div', { className: 'mdlb-toolbar-right' },
               h('span', { className: 'mdlb-count' }, t('quotaCoverage', { p: sections.length, n: allPlans })),
@@ -2107,7 +2255,11 @@ window.__ModuleLoader__.load({
     }
 
     function ValueTable({ rows, t, currency, onCurrency, rate, provider, onProvider }) {
-      const providers = useMemo(() => [...new Set(rows.map(r => r.provider))], [rows])
+      const providerItems = useMemo(() => {
+        const counts = new Map()
+        for (const r of rows) counts.set(r.provider, (counts.get(r.provider) || 0) + 1)
+        return [...counts.entries()].map(([name, count]) => ({ name, count }))
+      }, [rows])
       const filtered = useMemo(() => provider === '*' ? rows : rows.filter(r => r.provider === provider), [rows, provider])
       const max = useMemo(() => filtered.reduce((m, r) => Math.max(m, r.perDollar), 0), [filtered])
 
@@ -2116,13 +2268,13 @@ window.__ModuleLoader__.load({
         h('div', { className: 'mdlb-card' },
           h('div', { className: 'mdlb-card-top' },
             h('div', { className: 'mdlb-toolbar-left' },
-              h('button', { className: 'mdlb-provider', 'data-active': String(provider === '*'), onClick: () => onProvider('*') }, t('allProviders')),
-              providers.map(p => h('button', {
-                key: p,
-                className: 'mdlb-provider',
-                'data-active': String(provider === p),
-                onClick: () => onProvider(p),
-              }, p)),
+              h(ProviderBar, {
+                items: providerItems,
+                active: provider,
+                allLabel: t('allProviders'),
+                allCount: rows.length,
+                onSelect: onProvider,
+              }),
             ),
             h('div', { className: 'mdlb-toolbar-right' },
               h(CurrencySwitch, { currency, onCurrency, rate, t }),
@@ -2965,7 +3117,15 @@ window.__ModuleLoader__.load({
               { key: 'output', label: t('colOutput'), digits: 1 },
             ],
             href: row => 'https://modeldial.com/models/' + encodeURIComponent(row.key),
-            podium: row => t('colComprehension') + ' ' + formatScore(row.understanding, 1),
+            podiumMetrics: row => [
+              { label: t('colComprehension'), score: row.understanding, value: formatScore(row.understanding, 1) },
+              { label: t('colOutput'), score: row.output, value: formatScore(row.output, 1) },
+              ...(row.subaxes || []).slice(0, 4).map(axis => ({
+                label: axis.label,
+                score: axis.score,
+                value: formatScore(axis.score, 0),
+              })),
+            ],
             axes: row => (row.subaxes || []).map(axis => ({
               label: axis.label,
               value: formatScore(axis.score, 0),
@@ -2995,7 +3155,16 @@ window.__ModuleLoader__.load({
               { key: 'cost', label: t('colCostEff'), digits: 1 },
             ],
             href: () => 'https://modeldial.com/leaderboard/harness',
-            podium: row => t('colStability') + ' ' + formatScore(row.stability, 1) + '%',
+            podiumMetrics: row => [
+              { label: t('colStability'), score: row.stability, value: formatScore(row.stability, 1) + '%' },
+              { label: t('colTime'), score: row.time, value: formatScore(row.time, 1) },
+              { label: t('colCostEff'), score: row.cost, value: formatScore(row.cost, 1) },
+              ...(row.domains || []).slice(0, 3).map(domain => ({
+                label: domain.label,
+                score: domain.score,
+                value: formatScore(domain.score, 1),
+              })),
+            ],
             axes: row => (row.domains || []).map(domain => ({
               label: domain.label,
               value: formatScore(domain.score, 1),

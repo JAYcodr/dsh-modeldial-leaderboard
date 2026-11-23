@@ -201,6 +201,7 @@ test('halftone canvas, refresh busy state, and readable CSS rules are wired', ()
   assert.match(cssText, /@starting-style/)
   assert.match(cssText, /\.mdlb-detail-clip/)
   assert.match(cssText, /prefers-reduced-motion:\s*reduce/)
+  assert.match(cssText, /\.mdlb-table:not\(\[data-wide="true"\]\)\s*th:nth-child\(2\)[\s\S]*width:\s*1%/)
 })
 
 test('expanded writing row wraps axes inside the smooth detail clip drawer', () => {
@@ -209,4 +210,20 @@ test('expanded writing row wraps axes inside the smooth detail clip drawer', () 
   assert.equal(clips.length, 1)
   const axesBars = findAll(clips[0], n => n.type === 'i' && n.props?.style && '--axis-i' in n.props.style)
   assert.equal(axesBars.length, 8)
+})
+
+test('podium cards render sub-metric grid and quota/value render structured provider bar', () => {
+  const boardTree = renderTabTree('board')
+  const podMetrics = findAll(boardTree, n => n.props?.className === 'mdlb-pod-m')
+  assert.equal(podMetrics.length, 15, 'top 3 coding podium cards should each display 5 sub-metrics')
+
+  for (const tab of ['quota', 'value']) {
+    const tree = renderTabTree(tab)
+    const providerBar = findAll(tree, n => n.props?.className === 'mdlb-providers')
+    assert.equal(providerBar.length, 1, `${tab} tab should use structured .mdlb-providers bar`)
+    const allChip = findAll(providerBar[0], n => n.props?.['data-all'] === 'true')
+    assert.equal(allChip.length, 1)
+    const counts = findAll(providerBar[0], n => n.props?.className === 'mdlb-provider-n')
+    assert.ok(counts.length > 1)
+  }
 })
