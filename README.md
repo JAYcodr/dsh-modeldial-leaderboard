@@ -76,6 +76,8 @@ npm test        # 解析器 + 四个路由 + 落盘/重启 + 客户端渲染冒�
 
 `test/fixtures/` 是从上游裁剪下来的样本（CI 不联网）。上游改版导致解析失败时，跑 `node scripts/refresh-fixtures.mjs` 重新生成再对照 diff。
 
+想直接看版式、不启动 DSH：`node scripts/preview.mjs --tab=writing`（可选 `--dark`、`--width=1600`、`--height=900`、`--open=<行 key>`、`--all`），会把客户端用 fixtures 数据渲染成静态 HTML，输出路径在命令里。
+
 ## 安装
 
 先把仓库克隆或解压到任意目录（下称 `<插件目录>`，用绝对路径），再把它链进你正在使用的 profile：
