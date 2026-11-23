@@ -2,28 +2,63 @@
  * Host half of the Modeldial panel bundle.
  *
  * The Web page cannot fetch modeldial.com itself (cross-origin), so this
- * plugin owns the two upstream fetches, parses the server-rendered tables,
- * and serves the result as JSON on same-origin routes the Client half reads:
+ * plugin owns the upstream fetches, parses the payloads, and serves the result
+ * as JSON on same-origin routes the Client half reads:
  *
  *   GET /__modeldial/leaderboard   coding leaderboard, one row per model
  *   GET /__modeldial/quota         subscription quota matrices per provider
+ *   GET /__modeldial/writing       text-capability leaderboard (official feed)
+ *   GET /__modeldial/harness       harness leaderboard, one row per harness
  *
  * A short in-process cache keeps the page responsive; `?force=1` bypasses it.
  * A failed fetch is reported as `{ ok: false, error }` together with the last
  * good payload, so the panel can show "failed" instead of an empty board.
+ * The last good payload of every source is also written to disk, so a fresh
+ * DSH process can paint the panel before (or without) reaching upstream.
  */
 
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
+
 const SOURCE = {
-  leaderboard: 'https://modeldial.com/leaderboard/coding?axis=overall',
-  quota: 'https://modeldial.com/subscriptions?period=week&view=catalog&currency=CNY&provider=Google',
+  leaderboard: {
+    url: 'https://modeldial.com/leaderboard/coding?axis=overall',
+    accept: 'text/html,application/xhtml+xml',
+    label: '榜单',
+    empty: '页面里没有解析到模型行（结构可能变了）',
+  },
+  quota: {
+    url: 'https://modeldial.com/subscriptions?period=week&view=catalog&currency=CNY',
+    accept: 'text/html,application/xhtml+xml',
+    label: '额度页',
+    empty: '页面里没有解析到额度表（结构可能变了）',
+  },
+  // The writing board is rendered on the client. The page itself reads this
+  // first-party snapshot feed, so pulling the same JSON needs no browser.
+  writing: {
+    url: 'https://reference.modeldial.com/writing-snapshots/current.json',
+    accept: 'application/json',
+    label: '文本榜',
+    empty: '数据里没有解析到模型行（结构可能变了）',
+  },
+  harness: {
+    url: 'https://modeldial.com/leaderboard/harness',
+    accept: 'text/html,application/xhtml+xml',
+    label: 'Harness 榜',
+    empty: '页面里没有解析到 Harness 行（结构可能变了）',
+  },
 }
 
 const ROUTES = {
   '/__modeldial/leaderboard': { key: 'leaderboard', ttlMs: 4 * 60 * 1000 },
   '/__modeldial/quota': { key: 'quota', ttlMs: 10 * 60 * 1000 },
+  '/__modeldial/writing': { key: 'writing', ttlMs: 15 * 60 * 1000 },
+  '/__modeldial/harness': { key: 'harness', ttlMs: 10 * 60 * 1000 },
 }
 
 const FETCH_TIMEOUT_MS = 30 * 1000
+const RETRY_DELAY_MS = 800
 
 /** @param {string} s @returns {string} */
 function strip(s) {
@@ -38,6 +73,14 @@ function strip(s) {
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+/** "53.2%" / "1,052" / 57.06 -> number, anything else -> null. */
+function toScore(value) {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  const n = Number(String(value).replace(/[%,\s]/g, ''))
+  return Number.isFinite(n) ? n : null
 }
 
 /** Parse the coding leaderboard table: one row per model. */
@@ -188,30 +231,252 @@ function parseQuota(html) {
   return out
 }
 
-const PARSERS = { leaderboard: parseLeaderboard, quota: parseQuota }
+/**
+ * The snapshot names its subaxes after the graders; the board renames and
+ * regroups them for readers. Same map the site ships, so the panel and the
+ * upstream table read alike.
+ */
+const WRITING_AXES = [
+  {
+    id: 'understanding',
+    label: '文字理解',
+    subaxes: [
+      ['语义与事实', '语义辨析'],
+      ['材料综合与取舍', '证据整合'],
+      ['意图与语境', '意图推断'],
+      ['指令与边界', '规则应用'],
+    ],
+  },
+  {
+    id: 'output',
+    label: '文字输出',
+    subaxes: [
+      ['中文表达', '文本表达'],
+      ['文体与场景适配', '文体适配'],
+      ['结构与推进', '叙事推进'],
+      ['内容完成度', '成稿完整度'],
+    ],
+  },
+]
+
+/**
+ * Text-capability board. The snapshot carries no rank, and its row order is not
+ * the ranking either (fresh entries are appended at the tail), so the board is
+ * ordered here the same way the upstream page orders itself: overall score
+ * descending, ties by model id.
+ */
+function parseWriting(payload) {
+  if (!payload || payload.schema_version !== 1 || !Array.isArray(payload.rows) || payload.rows.length === 0) {
+    throw new Error('文本榜数据格式变了（schema_version / rows 不符）')
+  }
+  const rows = []
+  for (const row of payload.rows) {
+    if (!row || typeof row !== 'object') continue
+    const name = typeof row.display_name === 'string' ? row.display_name.trim() : ''
+    const summary = row.summary || {}
+    const overall = toScore(summary.score)
+    if (!name || overall === null) continue
+    const axes = summary.axes || {}
+    const subscores = summary.subaxes || {}
+    const subaxes = []
+    for (const axis of WRITING_AXES) {
+      for (const [key, label] of axis.subaxes) {
+        subaxes.push({
+          key,
+          label,
+          axis: axis.id,
+          score: toScore(subscores[key] && subscores[key].score),
+        })
+      }
+    }
+    rows.push({
+      key: row.model_id || row.configuration_id || name,
+      name,
+      effort: row.reasoning_effort || '',
+      overall,
+      understanding: toScore(axes.understanding && axes.understanding.score),
+      output: toScore(axes.output && axes.output.score),
+      subaxes,
+    })
+  }
+  if (rows.length === 0) throw new Error('文本榜里没有解析到模型行')
+  rows.sort((a, b) => b.overall - a.overall || String(a.key).localeCompare(String(b.key)))
+  rows.forEach((row, index) => {
+    row.rank = String(index + 1).padStart(2, '0')
+  })
+  return {
+    publishedAt: typeof payload.published_at === 'string' ? payload.published_at : '',
+    revision: typeof payload.revision === 'string' ? payload.revision : '',
+    rows,
+  }
+}
+
+/** Column name -> row field for the Harness board; everything else is a domain score. */
+const HARNESS_FIELDS = {
+  综合分: 'overall',
+  稳定完成率: 'stability',
+  时间效率: 'time',
+  成本效率: 'cost',
+}
+
+/** Parse the server-rendered Harness board: one <tr data-harness> per harness. */
+function parseHarness(html) {
+  const rows = []
+  const rowRe = /<tr\b[^>]*\bdata-harness="([^"]+)"[^>]*>([\s\S]*?)<\/tr>/g
+  let m
+  while ((m = rowRe.exec(html)) !== null) {
+    const key = m[1]
+    const body = m[2]
+    const nameMatch = body.match(/class="harness-row-toggle"[^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/)
+    const name = nameMatch ? strip(nameMatch[1]) : ''
+    if (!name) continue
+    const rankMatch = body.match(/<td\b[^>]*>\s*(\d+)\s*<\/td>/)
+    const row = {
+      rank: rankMatch ? rankMatch[1] : '',
+      key,
+      name,
+      overall: null,
+      stability: null,
+      time: null,
+      cost: null,
+      domains: [],
+    }
+    for (const cell of body.matchAll(/<td\b[^>]*\bdata-label="([^"]+)"[^>]*>([\s\S]*?)<\/td>/g)) {
+      const label = cell[1]
+      const valueMatch = cell[2].match(/<span[^>]*>([\s\S]*?)<\/span>/)
+      if (!valueMatch) continue
+      const score = toScore(strip(valueMatch[1]))
+      const field = HARNESS_FIELDS[label]
+      if (field) row[field] = score
+      else row.domains.push({ label, score })
+    }
+    if (row.overall === null) continue
+    rows.push(row)
+  }
+  if (rows.length === 0) throw new Error('Harness 榜里没有解析到 Harness 行')
+  return { rows }
+}
+
+const PARSERS = {
+  leaderboard: parseLeaderboard,
+  quota: parseQuota,
+  writing: text => {
+    let payload
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      throw new Error('文本榜返回的不是 JSON（结构可能变了）')
+    }
+    return parseWriting(payload)
+  },
+  harness: parseHarness,
+}
+
+/** How many rows a payload carries; used to reject empty parses and validate disk cache. */
+function rowCount(key, data) {
+  if (!data) return 0
+  if (key === 'writing' || key === 'harness') return Array.isArray(data.rows) ? data.rows.length : 0
+  return Array.isArray(data) ? data.length : 0
+}
 
 /** Exposed so the parsers can be exercised against saved HTML without restarting DSH. */
-export const __test = { parseLeaderboard, parseQuota, toYi }
+export const __test = { parseLeaderboard, parseQuota, parseWriting, parseHarness, toYi, toScore, rowCount }
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/** One retry for transport failures and gateway hiccups; never for parse errors. */
+async function fetchWithRetry(url, headers, signal) {
+  let lastError = null
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch(url, { headers, signal })
+      if (attempt === 0 && (response.status === 502 || response.status === 503 || response.status === 504)) {
+        lastError = new Error(`HTTP ${response.status}`)
+        await sleep(RETRY_DELAY_MS)
+        continue
+      }
+      return response
+    } catch (error) {
+      if (error && error.name === 'AbortError') throw error
+      lastError = error
+      if (attempt === 0) await sleep(RETRY_DELAY_MS)
+    }
+  }
+  throw lastError
+}
 
 /** Fetch one upstream page and turn it into the payload the panel renders. */
-async function fetchPayload(key) {
+async function fetchPayload(key, etag) {
+  const spec = SOURCE[key]
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
-    const response = await fetch(SOURCE[key], {
-      headers: {
-        accept: 'text/html,application/xhtml+xml',
-        'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'user-agent': 'deepseek-harness/modeldial-leaderboard',
-      },
-      signal: controller.signal,
-    })
+    const headers = {
+      accept: spec.accept,
+      'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'user-agent': 'deepseek-harness/modeldial-leaderboard',
+    }
+    // The writing feed is the only source serving an ETag; others simply see no header.
+    if (etag) headers['if-none-match'] = etag
+    const response = await fetchWithRetry(spec.url, headers, controller.signal)
+    if (response.status === 304) return { notModified: true }
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const data = PARSERS[key](await response.text())
-    if (data.length === 0) throw new Error(key === 'leaderboard' ? '页面里没有解析到模型行（结构可能变了）' : '页面里没有解析到额度表（结构可能变了）')
-    return data
+    if (rowCount(key, data) === 0) throw new Error(spec.empty)
+    return { data, etag: response.headers.get('etag') || '' }
   } finally {
     clearTimeout(timer)
+  }
+}
+
+/** Human-readable failure line; the panel prints it verbatim inside the banner. */
+function describeError(error) {
+  if (!error) return '未知错误'
+  if (error.name === 'AbortError') return '抓取超时'
+  const cause = error.cause
+  if (error instanceof TypeError) {
+    const detail = (cause && (cause.code || cause.message)) || ''
+    return '网络错误' + (detail ? `（${String(detail)}）` : '')
+  }
+  return String(error.message || error)
+}
+
+/** Where the last good payload of every source is parked between processes. */
+function cacheDir() {
+  const home = process.env.DSH_HOME || join(homedir(), '.dsh')
+  return join(home, 'cache', 'modeldial-leaderboard')
+}
+
+async function readCache(key) {
+  try {
+    const parsed = JSON.parse(await readFile(join(cacheDir(), `${key}.json`), 'utf8'))
+    if (!parsed || rowCount(key, parsed.data) === 0) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+/** Atomic write: a reader never sees a half-written payload, a dead process leaves only *.tmp. */
+async function writeCache(key, slot) {
+  try {
+    const dir = cacheDir()
+    await mkdir(dir, { recursive: true })
+    const target = join(dir, `${key}.json`)
+    const tmp = `${target}.${process.pid}.tmp`
+    const body = JSON.stringify({
+      key,
+      fetchedAt: new Date(slot.at).toISOString(),
+      savedAt: Date.now(),
+      etag: slot.etag || '',
+      data: slot.data,
+    })
+    await writeFile(tmp, body, 'utf8')
+    await rename(tmp, target)
+  } catch {
+    // Cache is a nicety; a read-only home must not break the panel.
   }
 }
 
@@ -231,21 +496,53 @@ export const inject = ['webServer']
 export function apply(ctx) {
   /** Last successful payload per source, plus the in-flight fetch. */
   const state = {
-    leaderboard: { at: 0, data: null, pending: null },
-    quota: { at: 0, data: null, pending: null },
+    leaderboard: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
+    quota: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
+    writing: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
+    harness: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
+  }
+
+  /** Payload shape never changes; `from` only says where the bytes came from. */
+  function payloadOf(slot, ok, cached, error) {
+    return {
+      ok,
+      cached,
+      from: slot.from,
+      fetchedAt: slot.at ? new Date(slot.at).toISOString() : null,
+      error,
+      data: slot.data,
+    }
   }
 
   async function read(key, force, ttlMs) {
     const slot = state[key]
+    if (!slot.loaded) {
+      slot.loaded = true
+      const cached = await readCache(key)
+      if (cached && slot.data === null) {
+        slot.data = cached.data
+        slot.at = Date.parse(cached.fetchedAt) || cached.savedAt || 0
+        slot.etag = cached.etag || ''
+        slot.from = 'disk'
+      }
+    }
     if (!force && slot.data && Date.now() - slot.at < ttlMs) {
-      return { ok: true, cached: true, fetchedAt: new Date(slot.at).toISOString(), error: null, data: slot.data }
+      return payloadOf(slot, true, true, null)
     }
     if (!slot.pending) {
-      slot.pending = fetchPayload(key)
-        .then(data => {
-          slot.data = data
+      slot.pending = fetchPayload(key, slot.data ? slot.etag : '')
+        .then(async result => {
+          if (result.notModified && slot.data) {
+            slot.at = Date.now()
+            slot.from = 'network'
+            return slot.data
+          }
+          slot.data = result.data
+          slot.etag = result.etag || ''
           slot.at = Date.now()
-          return data
+          slot.from = 'network'
+          await writeCache(key, slot)
+          return slot.data
         })
         .finally(() => {
           slot.pending = null
@@ -253,16 +550,9 @@ export function apply(ctx) {
     }
     try {
       const data = await slot.pending
-      return { ok: true, cached: false, fetchedAt: new Date(slot.at).toISOString(), error: null, data }
+      return payloadOf(slot, true, false, null) // data === slot.data
     } catch (error) {
-      const message = error && error.name === 'AbortError' ? '抓取超时' : String((error && error.message) || error)
-      return {
-        ok: false,
-        cached: Boolean(slot.data),
-        fetchedAt: slot.at ? new Date(slot.at).toISOString() : null,
-        error: message,
-        data: slot.data,
-      }
+      return payloadOf(slot, false, Boolean(slot.data), describeError(error))
     }
   }
 

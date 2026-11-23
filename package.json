@@ -1,10 +1,32 @@
 {
   "name": "@local/modeldial-leaderboard",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "private": true,
   "type": "module",
-  "description": "Modeldial coding leaderboard panel for the DSH web GUI",
+  "description": "Modeldial boards for the DSH web GUI: coding, text-capability and harness leaderboards plus the subscription quota catalog",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "leaderboard",
+    "modeldial"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JAYcodr/dsh-modeldial-leaderboard.git"
+  },
+  "homepage": "https://github.com/JAYcodr/dsh-modeldial-leaderboard#readme",
+  "bugs": {
+    "url": "https://github.com/JAYcodr/dsh-modeldial-leaderboard/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check index.js && node --check client.js",
+    "test": "node --test test/*.test.js"
+  },
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",

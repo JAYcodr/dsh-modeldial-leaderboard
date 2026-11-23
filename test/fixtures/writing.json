@@ -1,0 +1,502 @@
+{
+ "schema_version": 1,
+ "board_id": "writing",
+ "published_at": "2026-11-19T12:06:47+00:00",
+ "revision": "axis-release-3e04c5c6-06e4-4335-afe8-92b58ca39d36",
+ "rows": [
+  {
+   "configuration_id": "sha256:79debd7fd28424b893a0f1d3a67d6253337cd48fcb49e873d63d51db8cd8af32",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Gemini 4 Carbon",
+   "model_id": "gemini-4-carbon",
+   "operation_sequence": 0,
+   "profile_id": "sha256:cf901d011a2f117db8f6beb12ce4b41ae8496ac91e13244cc46884635408ade9",
+   "reasoning_effort": "high",
+   "result_id": "result-7d44d897-61a0-557b-b7be-56d3b12c9aad",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 89.0909090909091
+     },
+     "understanding": {
+      "score": 99.0909090909091
+     }
+    },
+    "score": 94.0909090909091,
+    "subaxes": {
+     "中文表达": {
+      "score": 100
+     },
+     "内容完成度": {
+      "score": 75
+     },
+     "意图与语境": {
+      "score": 100
+     },
+     "指令与边界": {
+      "score": 100
+     },
+     "文体与场景适配": {
+      "score": 89.16666666666667
+     },
+     "材料综合与取舍": {
+      "score": 97.5
+     },
+     "结构与推进": {
+      "score": 95.83333333333333
+     },
+     "语义与事实": {
+      "score": 100
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:97ef72d14acbfa14be9243e0680745d30c938e08dd917d3143e1746888e3071c",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Claude Opus 5.5",
+   "model_id": "claude-opus-5-5",
+   "operation_sequence": 0,
+   "profile_id": "sha256:a2fcb5b4e7ffc2cdee755b638dd42b781f72558d35306259763614b8b944912e",
+   "reasoning_effort": "max",
+   "result_id": "result-1c0cdd4b-c7b7-5109-ae34-30cd9da71841",
+   "score_origin": "reviewed_result",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 86.80397727272727
+     },
+     "understanding": {
+      "score": 85.53030303030303
+     }
+    },
+    "score": 86.16714015151516,
+    "subaxes": {
+     "中文表达": {
+      "score": 82.109375
+     },
+     "内容完成度": {
+      "score": 80.20833333333333
+     },
+     "意图与语境": {
+      "score": 100
+     },
+     "指令与边界": {
+      "score": 91.66666666666667
+     },
+     "文体与场景适配": {
+      "score": 85.83333333333333
+     },
+     "材料综合与取舍": {
+      "score": 89.375
+     },
+     "结构与推进": {
+      "score": 97.5
+     },
+     "语义与事实": {
+      "score": 66.66666666666667
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:2f0439e461db4f5341c3034b2aa451bdc6ac2f436c9bd74b5f24087673eeeacc",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Muse Wonder",
+   "model_id": "muse-wonder",
+   "operation_sequence": 0,
+   "profile_id": "sha256:a2fcb5b4e7ffc2cdee755b638dd42b781f72558d35306259763614b8b944912e",
+   "reasoning_effort": "max",
+   "result_id": "result-f79b3006-ca90-5f94-ba2d-75ce5ea06402",
+   "score_origin": "reviewed_result",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 76.23863636363636
+     },
+     "understanding": {
+      "score": 91.51515151515152
+     }
+    },
+    "score": 83.87689393939394,
+    "subaxes": {
+     "中文表达": {
+      "score": 60.6875
+     },
+     "内容完成度": {
+      "score": 65.07291666666667
+     },
+     "意图与语境": {
+      "score": 100
+     },
+     "指令与边界": {
+      "score": 100
+     },
+     "文体与场景适配": {
+      "score": 84.82291666666667
+     },
+     "材料综合与取舍": {
+      "score": 76.66666666666667
+     },
+     "结构与推进": {
+      "score": 89.1875
+     },
+     "语义与事实": {
+      "score": 100
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:a83ac91cce7644e44407babb825360c135cc716c12190835eeca00a8773f4f7b",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Gemini 4 Argon",
+   "model_id": "gemini-4-argon",
+   "operation_sequence": 0,
+   "profile_id": "sha256:a2fcb5b4e7ffc2cdee755b638dd42b781f72558d35306259763614b8b944912e",
+   "reasoning_effort": "high",
+   "result_id": "result-cfe9c28d-bd07-56cf-b621-947eaa78b18d",
+   "score_origin": "reviewed_result",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 72.82102272727273
+     },
+     "understanding": {
+      "score": 93.03030303030303
+     }
+    },
+    "score": 82.92566287878788,
+    "subaxes": {
+     "中文表达": {
+      "score": 62.28125
+     },
+     "内容完成度": {
+      "score": 71.5625
+     },
+     "意图与语境": {
+      "score": 91.66666666666667
+     },
+     "指令与边界": {
+      "score": 100
+     },
+     "文体与场景适配": {
+      "score": 69.19791666666667
+     },
+     "材料综合与取舍": {
+      "score": 85
+     },
+     "结构与推进": {
+      "score": 84.72916666666667
+     },
+     "语义与事实": {
+      "score": 100
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:4eebee3197ce8b0a06383e144f6bd090d37f8b4c1d2e08626378b5f0ed29f7f0",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Claude Sonnet 5.5",
+   "model_id": "claude-sonnet-5-5",
+   "operation_sequence": 0,
+   "profile_id": "sha256:a2fcb5b4e7ffc2cdee755b638dd42b781f72558d35306259763614b8b944912e",
+   "reasoning_effort": "max+high",
+   "result_id": "result-c9f9429d-100d-5047-a4e7-4ce080b9bc87",
+   "score_origin": "reviewed_result",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 79.32954545454545
+     },
+     "understanding": {
+      "score": 84.92424242424242
+     }
+    },
+    "score": 82.12689393939394,
+    "subaxes": {
+     "中文表达": {
+      "score": 73.6875
+     },
+     "内容完成度": {
+      "score": 75.72916666666667
+     },
+     "意图与语境": {
+      "score": 83.33333333333333
+     },
+     "指令与边界": {
+      "score": 100
+     },
+     "文体与场景适配": {
+      "score": 82.15625
+     },
+     "材料综合与取舍": {
+      "score": 91.875
+     },
+     "结构与推进": {
+      "score": 83.86458333333333
+     },
+     "语义与事实": {
+      "score": 66.66666666666667
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:41f3a9af971b34c0f550f223e22069ddeaa0072051c84f6c0c7754f9b3fff412",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Qwen4-Max-Preview",
+   "model_id": "qwen4-max-preview",
+   "operation_sequence": 0,
+   "profile_id": "sha256:8c571c5278c72a63bc0f58fbbc6c20a42792b4697ca1915bf072cc8b181fa068",
+   "reasoning_effort": "default",
+   "result_id": "result-1f24c390-aab6-5116-81a1-f5ed9724ca1a",
+   "review_provenance": {
+    "generation_variants": {
+     "CNWBP11": {
+      "max_output_tokens": 65536,
+      "previous_max_output_tokens": 32768
+     }
+    },
+    "label_en": "Preserved scores with missing-only supplementary review",
+    "label_zh": "保留原分并补齐缺失评分",
+    "preserved_online_answers": 13,
+    "supplementary_review_answers": 8
+   },
+   "score_origin": "missing_only_local_sol_max_review",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 73.27272727272727
+     },
+     "understanding": {
+      "score": 83.33333333333333
+     }
+    },
+    "score": 78.3030303030303,
+    "subaxes": {
+     "中文表达": {
+      "score": 66.28125
+     },
+     "内容完成度": {
+      "score": 62.760416666666664
+     },
+     "意图与语境": {
+      "score": 100
+     },
+     "指令与边界": {
+      "score": 83.33333333333334
+     },
+     "文体与场景适配": {
+      "score": 78.8125
+     },
+     "材料综合与取舍": {
+      "score": 87.5
+     },
+     "结构与推进": {
+      "score": 82.90625
+     },
+     "语义与事实": {
+      "score": 66.66666666666667
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:cf4ce10a5a16ff54db4ac8b1feba73bc06cc184784b32813f6d2cb1e6bf9e15a",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Gemini 4 Hydrogen",
+   "model_id": "gemini-4-hydrogen",
+   "operation_sequence": 0,
+   "profile_id": "sha256:b5f2153914ccdb8673473ca6e510a08ecc7ebb0afc71158c1edac691232b009c",
+   "reasoning_effort": "default",
+   "result_id": "result-5ab72062-aab1-50e2-9077-4d42245220d2",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 73.26988636363636
+     },
+     "understanding": {
+      "score": 84.24242424242425
+     }
+    },
+    "score": 78.7561553030303,
+    "subaxes": {
+     "中文表达": {
+      "score": 59.734375
+     },
+     "内容完成度": {
+      "score": 65.08333333333333
+     },
+     "意图与语境": {
+      "score": 100
+     },
+     "指令与边界": {
+      "score": 100
+     },
+     "文体与场景适配": {
+      "score": 70.26041666666667
+     },
+     "材料综合与取舍": {
+      "score": 81.66666666666667
+     },
+     "结构与推进": {
+      "score": 93.48958333333333
+     },
+     "语义与事实": {
+      "score": 66.66666666666667
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:04fbfd29fb12b764d40100edf22fe303088eea7d52bd83fcc16e203d9b2fef72",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "ERNIE 5.5 Flash Preview",
+   "model_id": "baidu/ernie-5.5-flash-preview:free",
+   "operation_sequence": 0,
+   "profile_id": "sha256:73ba61b54026f8aeccbda2a17ab8d4cb50237615a8455c65db169d1878c13876",
+   "reasoning_effort": "default",
+   "result_id": "result-8fd19b7e-a1c1-5189-806d-10111dcaa520",
+   "review_provenance": {
+    "label_en": "Local Sol Max review",
+    "label_zh": "本地 Sol Max 评分",
+    "question_count": 21,
+    "slot_count": 22
+   },
+   "score_origin": "local_sol_max_review",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 66.13636363636364
+     },
+     "understanding": {
+      "score": 75.75757575757576
+     }
+    },
+    "score": 70.9469696969697,
+    "subaxes": {
+     "中文表达": {
+      "score": 42.1875
+     },
+     "内容完成度": {
+      "score": 54.104166666666664
+     },
+     "意图与语境": {
+      "score": 91.66666666666666
+     },
+     "指令与边界": {
+      "score": 100
+     },
+     "文体与场景适配": {
+      "score": 75.95833333333333
+     },
+     "材料综合与取舍": {
+      "score": 62.5
+     },
+     "结构与推进": {
+      "score": 84.3125
+     },
+     "语义与事实": {
+      "score": 66.66666666666667
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:53a4e8b54c325bf319d06a7fb8c45e78ad88eec81ac1df9790f57f1c8265357a",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Qwen4-Max",
+   "model_id": "qwen4-max",
+   "operation_sequence": 0,
+   "profile_id": "sha256:975a33c7791fd2f3429391f5c5689dda5444e9c86011c51d702337d7b8b67367",
+   "reasoning_effort": "default",
+   "result_id": "result-f83f0126-49f1-5890-9d62-25b91f65d74a",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 71.2215909090909
+     },
+     "understanding": {
+      "score": 84.24242424242424
+     }
+    },
+    "score": 77.73200757575758,
+    "subaxes": {
+     "中文表达": {
+      "score": 65.28125
+     },
+     "内容完成度": {
+      "score": 43.5625
+     },
+     "意图与语境": {
+      "score": 100
+     },
+     "指令与边界": {
+      "score": 83.33333333333334
+     },
+     "文体与场景适配": {
+      "score": 80.57291666666667
+     },
+     "材料综合与取舍": {
+      "score": 90
+     },
+     "结构与推进": {
+      "score": 93.48958333333333
+     },
+     "语义与事实": {
+      "score": 66.66666666666667
+     }
+    }
+   }
+  },
+  {
+   "configuration_id": "sha256:84948aa294e1788bb087e8efb02a6cb7e2d9d2294428c56f4375e0347a703a16",
+   "cycle_id": "zh-writing-22-v1-api-v1-action-feedback-50-50-v3",
+   "display_name": "Gemini 4 Neon",
+   "model_id": "gemini-4-neon",
+   "operation_sequence": 0,
+   "profile_id": "sha256:ee390a09ca0c4139009da320d33a261fc75c6dcad02014cbe6be54720323692f",
+   "reasoning_effort": "xhigh",
+   "result_id": "result-170c91c5-900e-5af4-84b7-91ad9bfcadeb",
+   "summary": {
+    "axes": {
+     "output": {
+      "score": 86.39204545454545
+     },
+     "understanding": {
+      "score": 96.66666666666669
+     }
+    },
+    "score": 91.52935606060608,
+    "subaxes": {
+     "中文表达": {
+      "score": 76.90625
+     },
+     "内容完成度": {
+      "score": 75
+     },
+     "意图与语境": {
+      "score": 91.66666666666666
+     },
+     "指令与边界": {
+      "score": 100
+     },
+     "文体与场景适配": {
+      "score": 90.5
+     },
+     "材料综合与取舍": {
+      "score": 95
+     },
+     "结构与推进": {
+      "score": 100
+     },
+     "语义与事实": {
+      "score": 100
+     }
+    }
+   }
+  }
+ ]
+}

@@ -120,6 +120,27 @@ window.__ModuleLoader__.load({
       monthsShort: '{v}',
       quotaUnknown: '额度未知',
       perMonthUnit: '月',
+      tabWriting: '文本能力榜',
+      tabHarness: 'Harness 榜',
+      writingSub: '文本能力 · 统一中文题集 · 8 个评分维度',
+      harnessSub: 'Harness 本体 · 稳定完成率与 8 个能力域',
+      writingTopRight: '按文本总分',
+      harnessTopRight: '按 Harness 综合分',
+      colComprehension: '理解',
+      colOutput: '输出',
+      colStability: '稳定完成率',
+      colTime: '时间效率',
+      colCostEff: '成本效率',
+      expandAxis: '展开维度',
+      collapseAxis: '收起维度',
+      colAxes: '维度',
+      colHarness: 'Harness',
+      searchHarness: '搜索 Harness…',
+      noMatchHarness: '没有匹配的 Harness',
+      kpiBatch: 'Batch 评测批次',
+      kpiHarness: 'Harness 本体',
+      kpiDomains: 'Domains 场景域',
+      harnessCount: '{n} 个 Harness',
     }
 
     const en = {
@@ -225,6 +246,27 @@ window.__ModuleLoader__.load({
       monthsShort: '{v}',
       quotaUnknown: 'quota unknown',
       perMonthUnit: 'mo',
+      tabWriting: 'Writing ranks',
+      tabHarness: 'Harness ranks',
+      writingSub: 'Text capability · same Chinese prompt set · 8 axes',
+      harnessSub: 'Harnesses · completion rate and 8 capability domains',
+      writingTopRight: 'Text overall axis',
+      harnessTopRight: 'Harness overall axis',
+      colComprehension: 'Understanding',
+      colOutput: 'Output',
+      colStability: 'Completion',
+      colTime: 'Time',
+      colCostEff: 'Cost',
+      expandAxis: 'Show axes',
+      collapseAxis: 'Hide axes',
+      colAxes: 'Axes',
+      colHarness: 'Harness',
+      searchHarness: 'Search harnesses…',
+      noMatchHarness: 'No matching harness',
+      kpiBatch: 'Evaluation batch',
+      kpiHarness: 'Harnesses',
+      kpiDomains: 'Domains',
+      harnessCount: '{n} harnesses',
     }
 
     const SCORE_COLUMNS = [
@@ -1082,6 +1124,23 @@ window.__ModuleLoader__.load({
         color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 78%, var(--mdlb-ink));
       }
       .mdlb-detail-item[data-unknown="true"] > span { color: var(--mdlb-ink3); }
+      /* 维度明细：标签 / 条 / 数字三列，稠密但可扫读；不用卡片，和表格同一套发丝线 */
+      .mdlb-axis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
+        gap: 5px 22px;
+        padding: 8px 11px 10px;
+      }
+      .mdlb-axis {
+        display: grid;
+        grid-template-columns: 72px minmax(0, 1fr) 32px;
+        align-items: center; gap: 8px;
+        font-size: 11px; color: var(--mdlb-ink2);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-axis > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mdlb-axis .mdlb-bar { width: 100%; height: 3px; }
+      .mdlb-axis > b { text-align: right; font-weight: 600; font-size: 11.5px; color: var(--mdlb-ink); }
 
       /* 骨架 */
       .mdlb-skel {
@@ -1235,8 +1294,8 @@ window.__ModuleLoader__.load({
       return match ? Number(match[1]) : null
     }
 
-    function formatScore(value) {
-      return typeof value === 'number' ? value.toFixed(1) : '—'
+    function formatScore(value, digits = 1) {
+      return typeof value === 'number' ? value.toFixed(digits) : '—'
     }
 
     /** Static fallback used when the rate service is unreachable. */
@@ -1538,6 +1597,64 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 0-100 -> CSS width; anything unparseable collapses to 0. */
+    function percent(value) {
+      return Math.max(0, Math.min(100, Number(value) || 0)) + '%'
+    }
+
+    /**
+     * 排名表的排序状态：点表头切换方向、排名默认升序、未知值（"暂无"）不论
+     * 正反序都沉底。三张榜共用这套规则，列里真正参与比较的值由 `pick` 给。
+     */
+    function useRankSort(rows, pick) {
+      const [sort, setSort] = useState({ key: 'rank', dir: 'asc' })
+      const onSort = useCallback(key => {
+        setSort(prev => prev.key === key ? { key, dir: prev.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: key === 'rank' ? 'asc' : 'desc' })
+      }, [])
+      const sorted = useMemo(() => {
+        const copy = rows.slice()
+        const dir = sort.dir === 'asc' ? 1 : -1
+        copy.sort((a, b) => {
+          if (sort.key === 'rank') return dir * ((Number(a.rank) || 0) - (Number(b.rank) || 0))
+          const x = pick(a, sort.key)
+          const y = pick(b, sort.key)
+          const xNum = typeof x === 'number'
+          const yNum = typeof y === 'number'
+          if (xNum && !yNum) return -1
+          if (!xNum && yNum) return 1
+          if (xNum && yNum) return dir * (x - y)
+          return dir * String(x || '').localeCompare(String(y || ''), 'zh')
+        })
+        return copy
+      }, [rows, sort, pick])
+      return { sort, onSort, sorted }
+    }
+
+    /** 可排序表头：箭头跟着当前排序列走。 */
+    function SortHead({ colKey, label, left, sort, onSort }) {
+      return h('th', {
+        scope: 'col',
+        className: left ? 'mdlb-left' : undefined,
+        'data-sortable': 'true',
+        'data-active': String(sort.key === colKey),
+        onClick: () => onSort(colKey),
+      }, h('span', null, label), sort.key === colKey ? h('span', { style: { marginLeft: 4, opacity: .7 } }, sort.dir === 'desc' ? '↓' : '↑') : null)
+    }
+
+    /** 编程榜的列取值：文本列先解析成数字/时间，不按字典序排。 */
+    function leaderboardPick(row, key) {
+      if (key === 'model') return row.name
+      if (key === 'duration') return durationMinutes(row.duration)
+      if (key === 'cost') return dollarsOf(row.cost)
+      if (key === 'released') return Date.parse(row.released) || null
+      return row[key]
+    }
+
+    /** 文本榜 / Harness 榜：除模型名外都是裸数值。 */
+    function boardPick(row, key) {
+      return key === 'model' ? row.name : row[key]
+    }
+
     /** 前三名的大字报：模型名 + 综合分。固定按排名取，不跟随表格排序。 */
     function Podium({ rows, t }) {
       const top = rows.slice(0, 3)
@@ -1562,45 +1679,7 @@ window.__ModuleLoader__.load({
     }
 
     function LeaderboardTable({ rows, t, query, onQuery }) {
-      const [sort, setSort] = useState({ key: 'rank', dir: 'asc' })
-      const onSort = useCallback(key => {
-        setSort(prev => prev.key === key ? { key, dir: prev.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: key === 'rank' ? 'asc' : 'desc' })
-      }, [])
-      const sorted = useMemo(() => {
-        const copy = rows.slice()
-        const dir = sort.dir === 'asc' ? 1 : -1
-        /** Column key to the value actually compared; text columns are parsed, not alphabetised. */
-        const pick = row => {
-          if (sort.key === 'model') return row.name
-          if (sort.key === 'duration') return durationMinutes(row.duration)
-          if (sort.key === 'cost') return dollarsOf(row.cost)
-          if (sort.key === 'released') return Date.parse(row.released) || null
-          return row[sort.key]
-        }
-        copy.sort((a, b) => {
-          const x = pick(a)
-          const y = pick(b)
-          if (sort.key === 'rank') return dir * ((Number(a.rank) || 0) - (Number(b.rank) || 0))
-          const xNum = typeof x === 'number'
-          const yNum = typeof y === 'number'
-          // unknown values ("暂无") always sink to the bottom, whichever way the column is sorted
-          if (xNum && !yNum) return -1
-          if (!xNum && yNum) return 1
-          if (xNum && yNum) return dir * (x - y)
-          return dir * String(x || '').localeCompare(String(y || ''), 'zh')
-        })
-        return copy
-      }, [rows, sort])
-
-      const header = (key, label, left) => h('th', {
-        key,
-        scope: 'col',
-        className: left ? 'mdlb-left' : undefined,
-        'data-sortable': 'true',
-        'data-active': String(sort.key === key),
-        onClick: () => onSort(key),
-      }, h('span', null, label), sort.key === key ? h('span', { style: { marginLeft: 4, opacity: .7 } }, sort.dir === 'desc' ? '↓' : '↑') : null)
-
+      const { sort, onSort, sorted } = useRankSort(rows, leaderboardPick)
       // 默认视图：前三名上大字报，表格从第 4 名开始，避免同一行数据出现两次。
       // 一旦排序或搜索，大字报就隐藏，表格回到全量，否则标题「前三名」会和排好的次序矛盾。
       const sortedOrFiltered = sort.key !== 'rank' || sort.dir !== 'asc' || Boolean(query && query.trim())
@@ -1634,12 +1713,12 @@ window.__ModuleLoader__.load({
           h('div', { className: 'mdlb-body' },
             h('table', { className: 'mdlb-table' },
               h('thead', null, h('tr', null,
-                header('rank', t('colRank')),
-                header('model', t('colModel'), true),
-                ...SCORE_COLUMNS.map(([key, label]) => header(key, t(label))),
-                header('duration', t('colDuration')),
-                header('cost', t('colCost')),
-                header('released', t('colReleased')),
+                h(SortHead, { key: 'rank', colKey: 'rank', label: t('colRank'), sort, onSort }),
+                h(SortHead, { key: 'model', colKey: 'model', label: t('colModel'), left: true, sort, onSort }),
+                ...SCORE_COLUMNS.map(([key, label]) => h(SortHead, { key, colKey: key, label: t(label), sort, onSort })),
+                h(SortHead, { key: 'duration', colKey: 'duration', label: t('colDuration'), sort, onSort }),
+                h(SortHead, { key: 'cost', colKey: 'cost', label: t('colCost'), sort, onSort }),
+                h(SortHead, { key: 'released', colKey: 'released', label: t('colReleased'), sort, onSort }),
               )),
               h('tbody', null, tableRows.length === 0
                 ? h('tr', { key: '__empty__' }, h('td', { className: 'mdlb-empty-cell', colSpan: 11 },
@@ -1675,6 +1754,126 @@ window.__ModuleLoader__.load({
                 h('td', { className: 'mdlb-muted mdlb-date', title: row.released || undefined },
                   row.released ? row.released.slice(5) : '—'),
               ))),
+            ),
+          ),
+        ),
+      )
+    }
+
+    /** 新榜（文本 / Harness）的大字报：同一套版式，链接与副信息按榜单换。 */
+    function BoardPodium({ rows, t, href, detail, digits }) {
+      const top = rows.slice(0, 3)
+      if (top.length === 0) return null
+      return h('div', { className: 'mdlb-podium' },
+        top.map(row => h('div', { key: row.key, className: 'mdlb-pod', 'data-top': 'true' },
+          h('div', { className: 'mdlb-pod-no' }, String(row.rank).padStart(2, '0')),
+          h('div', { className: 'mdlb-pod-name' }, href
+            ? h('a', { href: href(row), target: '_blank', rel: 'noreferrer noopener' }, row.name)
+            : h('span', { title: row.name }, row.name)),
+          h('div', { className: 'mdlb-pod-score' },
+            h('b', null, formatScore(row.overall, digits)),
+            h('span', { className: 'mdlb-pod-unit' }, t('colOverall')),
+            h('i', { className: 'mdlb-bar' }, h('i', { style: { width: percent(row.overall) } }))),
+          h('div', { className: 'mdlb-pod-meta' },
+            row.effort ? h('span', { className: 'mdlb-chip' }, row.effort) : null,
+            h('span', { className: 'mdlb-pod-detail' }, detail(row)),
+          ),
+        )))
+    }
+
+    /**
+     * 文本榜 / Harness 榜共用的排名表：前三名大字报、第 4 名起进表格、表头排序、
+     * 搜索，加上每行可展开的 8 个维度。列定义由调用方给，渲染规则与编程榜一致。
+     */
+    function BoardTable({ rows, columns, t, query, onQuery, href, podium, axes, digits, countLabel, topRight, nameLabel, searchPlaceholder, noMatchLabel }) {
+      const { sort, onSort, sorted } = useRankSort(rows, boardPick)
+      const [open, setOpen] = useState(null)
+      // 默认视图：前三名上大字报，表格从第 4 名开始；一旦排序或搜索，大字报让位给全量表格
+      const sortedOrFiltered = sort.key !== 'rank' || sort.dir !== 'asc' || Boolean(query && query.trim())
+      const topThree = useMemo(() => rows
+        .slice()
+        .sort((a, b) => (Number(a.rank) || 0) - (Number(b.rank) || 0))
+        .slice(0, 3), [rows])
+      const tableRows = sortedOrFiltered ? sorted : sorted.filter(row => (Number(row.rank) || 0) > 3)
+      const span = 3 + columns.length
+
+      return h('div', { className: 'mdlb-main' },
+        sortedOrFiltered ? null : h(SectionBar, { no: '01', title: t('secTop'), right: topRight }),
+        sortedOrFiltered ? null : h(BoardPodium, { rows: topThree, t, href, detail: podium, digits }),
+        h(SectionBar, {
+          no: sortedOrFiltered ? '01' : '02',
+          title: sortedOrFiltered ? t('secAll') : t('secRest'),
+          right: t(countLabel || 'boardCount', { n: tableRows.length }),
+        }),
+        h('div', { className: 'mdlb-card' },
+          h('div', { className: 'mdlb-card-top' },
+            h('div', { className: 'mdlb-toolbar-left' },
+              query ? h('span', { className: 'mdlb-count' }, t('boardFiltered', { n: rows.length })) : null,
+            ),
+            h('input', {
+              className: 'mdlb-search',
+              type: 'search',
+              placeholder: searchPlaceholder || t('searchPlaceholder'),
+              value: query,
+              onChange: event => onQuery(event.target.value),
+            }),
+          ),
+          h('div', { className: 'mdlb-body' },
+            h('table', { className: 'mdlb-table' },
+              h('thead', null, h('tr', null,
+                h(SortHead, { key: 'rank', colKey: 'rank', label: t('colRank'), sort, onSort }),
+                h(SortHead, { key: 'model', colKey: 'model', label: nameLabel || t('colModel'), left: true, sort, onSort }),
+                ...columns.map(column => h(SortHead, { key: column.key, colKey: column.key, label: column.label, sort, onSort })),
+                h('th', { key: 'axes', scope: 'col' }, t('colAxes')),
+              )),
+              h('tbody', null, tableRows.length === 0
+                ? h('tr', { key: '__empty__' }, h('td', { className: 'mdlb-empty-cell', colSpan: span },
+                  h('div', { className: 'mdlb-empty' },
+                    h('span', { className: 'mdlb-empty-title' }, noMatchLabel || t('noMatch')),
+                    h('span', null, t('noMatchHint')))))
+                : tableRows.map((row, i) => {
+                  const expanded = open === row.key
+                  const detail = axes(row)
+                  return [
+                    h('tr', { key: row.key, style: { '--i': i } },
+                      h('td', { className: 'mdlb-rank', 'data-top': String(Number(row.rank) <= 3) },
+                        h('span', null, row.rank)),
+                      h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-name' },
+                        href
+                          ? h('a', {
+                            href: href(row),
+                            target: '_blank',
+                            rel: 'noreferrer noopener',
+                            title: row.name,
+                          }, row.name)
+                          : h('span', { title: row.name }, row.name),
+                        row.effort ? h('span', { className: 'mdlb-chip' }, row.effort) : null,
+                      )),
+                      ...columns.map(column => h('td', { key: column.key },
+                        h('span', { className: column.main ? 'mdlb-score mdlb-main-score' : 'mdlb-score' },
+                          h('span', null, formatScore(row[column.key], column.digits ?? 1) + (column.suffix || '')),
+                          h('i', { className: 'mdlb-bar', 'data-tone': tone(row[column.key]) },
+                            h('i', { style: { width: percent(row[column.key]) } })),
+                        ))),
+                      h('td', null, h('button', {
+                        className: 'mdlb-rowbtn',
+                        'aria-expanded': String(expanded),
+                        onClick: () => setOpen(expanded ? null : row.key),
+                      }, expanded ? t('collapseAxis') : t('expandAxis'))),
+                    ),
+                    expanded
+                      ? h('tr', { key: row.key + ':axes', className: 'mdlb-detail' },
+                        h('td', { colSpan: span, className: 'mdlb-left' },
+                          h('div', { className: 'mdlb-axis-grid' },
+                            detail.map(item => h('div', { key: item.label, className: 'mdlb-axis' },
+                              h('span', null, item.label),
+                              h('i', { className: 'mdlb-bar', 'data-tone': tone(item.score) },
+                                h('i', { style: { width: percent(item.score) } })),
+                              h('b', null, item.value),
+                            )))))
+                      : null,
+                  ]
+                })),
             ),
           ),
         ),
@@ -2193,7 +2392,11 @@ window.__ModuleLoader__.load({
          会落在榜单中部，看不到刊头和前三名（原来内层滚动时这也是同样的问题，
          只是窗口小、不容易发现） */
       const rootRef = useRef(null)
-      useEffect(() => { if (rootRef.current) rootRef.current.scrollTop = 0 }, [tab])
+      // 三个榜单共用同一个搜索框；切页签时清空，否则在写作榜里搜的词会带着去过滤编程榜
+      useEffect(() => {
+        if (rootRef.current) rootRef.current.scrollTop = 0
+        setQuery('')
+      }, [tab])
 
       /* 指针处的洞：pointermove 触发极密，直接写 style 会让 149 行的表掉帧，
          所以只记坐标、用 rAF 合并成每帧最多一次写入；减动效时干脆不留洞 */
@@ -2246,14 +2449,20 @@ window.__ModuleLoader__.load({
       const rate = useRate()
       const [board, loadBoard] = useFeed('/__modeldial/leaderboard')
       const [quota, loadQuota] = useFeed('/__modeldial/quota')
+      const [writing, loadWriting] = useFeed('/__modeldial/writing')
+      const [harness, loadHarness] = useFeed('/__modeldial/harness')
       const usesQuota = tab === 'quota' || tab === 'value' || tab === 'model' || tab === 'budget'
-      const active = usesQuota ? quota : board
-      const load = usesQuota ? loadQuota : loadBoard
+      const active = tab === 'writing' ? writing : tab === 'harness' ? harness : usesQuota ? quota : board
+      const load = tab === 'writing' ? loadWriting : tab === 'harness' ? loadHarness : usesQuota ? loadQuota : loadBoard
       const payload = active.payload
       const busy = active.busy
       const fetchedAt = formatTime(payload && payload.fetchedAt)
       const boardRows = useMemo(() => (board.payload && board.payload.data) || [], [board.payload])
       const sections = useMemo(() => (quota.payload && quota.payload.data) || [], [quota.payload])
+      const writingData = (writing.payload && writing.payload.data) || null
+      const writingRows = (writingData && writingData.rows) || []
+      const harnessData = (harness.payload && harness.payload.data) || null
+      const harnessRows = (harnessData && harnessData.rows) || []
 
       const entries = useMemo(() => planModelEntries(sections), [sections])
 
@@ -2267,10 +2476,26 @@ window.__ModuleLoader__.load({
 
       /* 榜单页的两格 KPI 不能用额度目录的数字：榜单 54 行、额度侧 28 个模型名，
          把 28 放在「同屏写着 51 个模型」的榜单上，用户第一眼就以为数据少了。
-         所以按页签取词：榜单说榜单的行数与组合，其余页签说额度目录。 */
-      const kpis = useMemo(() => (tab === 'board'
-        ? [['models', 'kpiBoardModels', boardRows.length], ['fresh', 'kpiBoardNew', boardRows.filter(r => r.isNew).length]]
-        : [['models', 'kpiModels', coverage.models], ['combos', 'kpiCombos', coverage.combos]]), [tab, boardRows, coverage])
+         所以按页签取词：每张榜说自己的行数，额度页签才说目录规模。 */
+      const kpis = useMemo(() => {
+        if (tab === 'board') {
+          if (boardRows.length === 0) return []
+          return [['models', 'kpiBoardModels', boardRows.length], ['fresh', 'kpiBoardNew', boardRows.filter(r => r.isNew).length]]
+        }
+        if (tab === 'writing') {
+          if (writingRows.length === 0) return []
+          // 上游只给整批的 published_at；面板标出批次日期，避免把 11-19 的数据当今天的
+          const batch = writingData && writingData.publishedAt ? writingData.publishedAt.slice(5, 10) : '—'
+          return [['models', 'kpiBoardModels', writingRows.length], ['batch', 'kpiBatch', batch]]
+        }
+        if (tab === 'harness') {
+          if (harnessRows.length === 0) return []
+          const domains = harnessRows[0] && Array.isArray(harnessRows[0].domains) ? harnessRows[0].domains.length : 0
+          return [['harness', 'kpiHarness', harnessRows.length], ['domains', 'kpiDomains', domains]]
+        }
+        if (coverage.providers === 0) return []
+        return [['models', 'kpiModels', coverage.models], ['combos', 'kpiCombos', coverage.combos]]
+      }, [tab, boardRows, writingRows, writingData, harnessRows, coverage])
 
       const valueRows = useMemo(() => {
         const out = []
@@ -2303,9 +2528,18 @@ window.__ModuleLoader__.load({
       }, [sections])
 
       const body = useMemo(() => {
+        const activeRows = tab === 'board'
+          ? boardRows
+          : tab === 'writing'
+            ? writingRows
+            : tab === 'harness'
+              ? harnessRows
+              : sections
+        const emptyCard = () => h('div', { className: 'mdlb-main' }, h('div', { className: 'mdlb-card' },
+          h('div', { className: 'mdlb-empty' }, t('empty'), h('span', null, t('emptyHint')))))
         /* 抓取失败且一个数据都没有：不要再摆一块「还没有数据」跟 banner 抢注意力，
            banner 已经写了失败原因和「重试」。有旧数据（stale）时照常显示表格 */
-        if (active.error && !(payload && payload.data && payload.data.length)) return null
+        if (active.error && activeRows.length === 0) return null
         if (active.loading && !payload) {
           return h('div', { className: 'mdlb-main' },
             h('div', { className: 'mdlb-card' },
@@ -2321,11 +2555,68 @@ window.__ModuleLoader__.load({
           const filtered = query.trim()
             ? boardRows.filter(r => (r.name + ' ' + r.effort).toLowerCase().includes(query.trim().toLowerCase()))
             : boardRows
-          if (boardRows.length === 0) {
-            return h('div', { className: 'mdlb-main' }, h('div', { className: 'mdlb-card' },
-              h('div', { className: 'mdlb-empty' }, t('empty'), h('span', null, t('emptyHint')))))
-          }
+          if (boardRows.length === 0) return emptyCard()
           return h(LeaderboardTable, { rows: filtered, total: boardRows.length, t, query, onQuery: setQuery })
+        }
+        if (tab === 'writing') {
+          if (writingRows.length === 0) return emptyCard()
+          const needle = query.trim().toLowerCase()
+          const filtered = needle
+            ? writingRows.filter(row => (row.name + ' ' + row.effort).toLowerCase().includes(needle))
+            : writingRows
+          return h(BoardTable, {
+            rows: filtered,
+            t,
+            query,
+            onQuery: setQuery,
+            digits: 2,
+            columns: [
+              { key: 'overall', label: t('colOverall'), main: true, digits: 2 },
+              { key: 'understanding', label: t('colComprehension'), digits: 1 },
+              { key: 'output', label: t('colOutput'), digits: 1 },
+            ],
+            href: row => 'https://modeldial.com/models/' + encodeURIComponent(row.key),
+            podium: row => t('colComprehension') + ' ' + formatScore(row.understanding, 1),
+            axes: row => (row.subaxes || []).map(axis => ({
+              label: axis.label,
+              value: formatScore(axis.score, 0),
+              score: axis.score,
+            })),
+            topRight: t('writingTopRight'),
+            countLabel: 'boardCount',
+          })
+        }
+        if (tab === 'harness') {
+          if (harnessRows.length === 0) return emptyCard()
+          const needle = query.trim().toLowerCase()
+          const filtered = needle
+            ? harnessRows.filter(row => row.name.toLowerCase().includes(needle))
+            : harnessRows
+          return h(BoardTable, {
+            rows: filtered,
+            t,
+            query,
+            onQuery: setQuery,
+            digits: 2,
+            columns: [
+              { key: 'overall', label: t('colOverall'), main: true, digits: 2 },
+              { key: 'stability', label: t('colStability'), digits: 1, suffix: '%' },
+              { key: 'time', label: t('colTime'), digits: 1 },
+              { key: 'cost', label: t('colCostEff'), digits: 1 },
+            ],
+            href: () => 'https://modeldial.com/leaderboard/harness',
+            podium: row => t('colStability') + ' ' + formatScore(row.stability, 1) + '%',
+            axes: row => (row.domains || []).map(domain => ({
+              label: domain.label,
+              value: formatScore(domain.score, 1),
+              score: domain.score,
+            })),
+            topRight: t('harnessTopRight'),
+            countLabel: 'harnessCount',
+            nameLabel: t('colHarness'),
+            searchPlaceholder: t('searchHarness'),
+            noMatchLabel: t('noMatchHarness'),
+          })
         }
         if (tab === 'model') {
           if (sections.length === 0) {
@@ -2353,7 +2644,7 @@ window.__ModuleLoader__.load({
             h('div', { className: 'mdlb-empty' }, t('empty'), h('span', null, t('emptyHint')))))
         }
         return h(QuotaTable, { sections, t, currency, onCurrency: setCurrency, rate })
-      }, [active.loading, payload, tab, t, query, boardRows, sections, valueRows, entries, currency, provider, rate])
+      }, [active.loading, payload, tab, t, query, boardRows, writingRows, harnessRows, sections, valueRows, entries, currency, provider, rate])
 
       return h('div', { className: 'mdlb-root', ref: rootRef },
         h('style', { key: 'mdlb-style' }, CSS),
@@ -2373,13 +2664,17 @@ window.__ModuleLoader__.load({
               : null,
             h('p', { className: 'mdlb-sub' }, tab === 'board'
               ? t('boardSub')
-              : tab === 'quota'
-                ? t('quotaSub')
-                : tab === 'model'
-                  ? t('modelSub')
-                  : tab === 'budget'
-                    ? t('budgetSub')
-                    : t(currency === 'CNY' ? 'valueSubCny' : 'valueSub')),
+              : tab === 'writing'
+                ? t('writingSub')
+                : tab === 'harness'
+                  ? t('harnessSub')
+                  : tab === 'quota'
+                    ? t('quotaSub')
+                    : tab === 'model'
+                      ? t('modelSub')
+                      : tab === 'budget'
+                        ? t('budgetSub')
+                        : t(currency === 'CNY' ? 'valueSubCny' : 'valueSub')),
           ),
           h('div', { className: 'mdlb-actions' },
             fetchedAt ? h('span', { className: 'mdlb-time', 'data-stale': String(!active.error ? false : true) },
@@ -2401,12 +2696,14 @@ window.__ModuleLoader__.load({
         ),
         h('div', { className: 'mdlb-tabs' },
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'board'), onClick: () => setTab('board') }, t('tabBoard')),
+          h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'writing'), onClick: () => setTab('writing') }, t('tabWriting')),
+          h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'harness'), onClick: () => setTab('harness') }, t('tabHarness')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'quota'), onClick: () => setTab('quota') }, t('tabQuota')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'value'), onClick: () => setTab('value') }, t('tabValue')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'model'), onClick: () => setTab('model') }, t('tabModel')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'budget'), onClick: () => setTab('budget') }, t('tabBudget')),
         ),
-        coverage.providers > 0
+        kpis.length > 0
           ? h('div', { className: 'mdlb-kpis' },
             kpis.map(([key, label, value]) => h('div', { key, className: 'mdlb-kpi' },
               h('div', { className: 'mdlb-kpi-n' }, String(value)),
