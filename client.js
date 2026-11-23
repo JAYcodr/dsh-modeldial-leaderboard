@@ -290,7 +290,7 @@ window.__ModuleLoader__.load({
         container-type: inline-size;
         --mdlb-ink: var(--dsw-alias-label-primary);
         --mdlb-ink2: var(--dsw-alias-label-secondary);
-        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 74%, var(--dsw-alias-label-primary));
+        --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 56%, var(--dsw-alias-label-primary));
         --mdlb-accent: #002fa7;
         --mdlb-accent-contrast: #ffffff;
         --mdlb-rule: color-mix(in srgb, var(--mdlb-ink) 11%, transparent);
@@ -330,9 +330,9 @@ window.__ModuleLoader__.load({
         /* 指针不在面板上时把洞推到画布外，等于「没有洞」 */
         --mdlb-mx: -9999px;
         --mdlb-my: -9999px;
-        /* 网点纸的高度＝标题带高度：刊头 151 + 页签 30 + KPI 98 + 余量，
+        /* 网点纸的高度＝标题带高度：字号/内边距抬高一档后，整条带按比例微调至 380px，
            再往下就该是干净的表格区。窄面板字号小一档，整条带也矮一些 */
-        --mdlb-band-h: 360px;
+        --mdlb-band-h: 380px;
         /* absolute 的纸要以这一层为定位基准，才能跟着内容一起滚 */
         position: relative;
 
@@ -349,10 +349,10 @@ window.__ModuleLoader__.load({
         padding: 0 32px 20px;
         box-sizing: border-box;
         color: var(--mdlb-ink);
-        /* 网点不画在这一层：这里是底色，点和便签都在上面那层 sticky 的纸上 */
+        /* 网点不画在这一层：这里是底色，点和便签都在上面那层纸上 */
         background-color: var(--dsw-alias-bg-base);
-        font-size: 13px;
-        line-height: 1.5;
+        font-size: 14px;
+        line-height: 1.55;
         -webkit-font-smoothing: antialiased;
       }
       /* 暗色：IKB 提亮，保证在深底上仍 ≥ 4.5:1 */
@@ -506,6 +506,26 @@ window.__ModuleLoader__.load({
         to { -webkit-mask-position: calc(100% + 320px) 40%; mask-position: calc(100% + 320px) 40%; }
       }
 
+      /* 浏览器实跑时由 Canvas 接管（data-canvas="active"），CSS 退场防止重影；
+         离线静态预览（preview.mjs）不跑 useEffect，自动回落到 CSS 静态半调底图 */
+      .mdlb-paper[data-canvas="active"] {
+        background-image: none;
+        animation: none;
+        -webkit-mask-image: none;
+        mask-image: none;
+      }
+      .mdlb-paper[data-canvas="active"]::before,
+      .mdlb-paper[data-canvas="active"]::after,
+      .mdlb-paper[data-canvas="active"] ~ .mdlb-sheen {
+        display: none;
+      }
+      .mdlb-paper-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
       /* 内容必须在网点之上 */
       .mdlb-root > *:not(.mdlb-paper):not(.mdlb-sheen):not(style) { position: relative; z-index: 1; }
 
@@ -522,8 +542,8 @@ window.__ModuleLoader__.load({
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 10.5px;
-        letter-spacing: .17em;
+        font-size: 11.5px;
+        letter-spacing: .13em;
         text-transform: uppercase;
         color: var(--mdlb-ink2);
       }
@@ -532,8 +552,8 @@ window.__ModuleLoader__.load({
         width: 7px; height: 7px;
         background: var(--mdlb-accent);
       }
-      .mdlb-title { margin: 0; font-size: 12.5px; font-weight: 600; letter-spacing: .01em; }
-      .mdlb-sub { margin: 4px 0 0; color: var(--mdlb-ink2); font-size: 12px; }
+      .mdlb-title { margin: 0; font-size: 13.5px; font-weight: 600; letter-spacing: .01em; }
+      .mdlb-sub { margin: 4px 0 0; color: var(--mdlb-ink2); font-size: 13px; line-height: 1.5; text-wrap: pretty; }
 
       /* 双段大字：21 家厂商 — 68 个套餐 */
       .mdlb-lede {
@@ -552,7 +572,7 @@ window.__ModuleLoader__.load({
       }
       .mdlb-lede em {
         font-style: normal;
-        font-size: 17px;
+        font-size: 17.5px;
         font-weight: 470;
         color: var(--mdlb-ink2);
       }
@@ -569,7 +589,7 @@ window.__ModuleLoader__.load({
         border-bottom: 1px solid var(--mdlb-rule);
         margin-top: 0;
       }
-      .mdlb-kpi { padding: 16px 0 14px; min-width: 0; }
+      .mdlb-kpi { padding: 16px 0 15px; min-width: 0; }
       .mdlb-kpi + .mdlb-kpi {
         padding-left: 20px;
         border-left: 1px solid var(--mdlb-rule);
@@ -579,7 +599,7 @@ window.__ModuleLoader__.load({
         font-variant-numeric: tabular-nums;
       }
       .mdlb-kpi .mdlb-kpi-l {
-        margin-top: 8px; font-size: 10px; letter-spacing: .15em;
+        margin-top: 8px; font-size: 11.5px; letter-spacing: .1em;
         text-transform: uppercase; color: var(--mdlb-ink2);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
@@ -591,7 +611,7 @@ window.__ModuleLoader__.load({
         border-bottom: 1px solid var(--mdlb-rule);
       }
       .mdlb-pod {
-        padding: 13px 16px 14px 0;
+        padding: 14px 16px 15px 0;
         border-right: 1px solid var(--mdlb-rule);
         min-width: 0;
       }
@@ -599,19 +619,19 @@ window.__ModuleLoader__.load({
       .mdlb-pod:nth-child(n+4) { border-top: 1px solid var(--mdlb-rule); }
       .mdlb-pod:not(:first-child) { padding-left: 16px; }
       .mdlb-pod-no {
-        font-size: 10px; letter-spacing: .16em; color: var(--mdlb-ink3);
+        font-size: 11.5px; letter-spacing: .12em; color: var(--mdlb-ink3);
         font-variant-numeric: tabular-nums;
       }
       .mdlb-pod[data-top="true"] .mdlb-pod-no { color: var(--mdlb-accent); font-weight: 650; }
       .mdlb-pod-name {
         margin: 5px 0 0;
-        font-size: 14.5px; font-weight: 550; letter-spacing: -.01em;
+        font-size: 15.5px; font-weight: 560; letter-spacing: -.01em;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
       .mdlb-pod-name a { color: inherit; text-decoration: none; }
       .mdlb-pod-name a:hover { color: var(--mdlb-accent); }
       .mdlb-pod-score {
-        display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px;
+        display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px;
         margin-top: 6px;
         font-variant-numeric: tabular-nums;
       }
@@ -619,11 +639,11 @@ window.__ModuleLoader__.load({
         font-size: 30px; font-weight: 450; letter-spacing: -.04em; line-height: 1;
       }
       .mdlb-pod[data-top="true"] .mdlb-pod-score b { font-size: 38px; }
-      .mdlb-pod-unit { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--mdlb-ink3); }
-      .mdlb-pod-score .mdlb-bar { width: 100%; height: 2px; margin-top: 3px; flex-basis: 100%; }
+      .mdlb-pod-unit { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--mdlb-ink3); }
+      .mdlb-pod-score .mdlb-bar { width: 100%; height: 2px; margin-top: 4px; flex-basis: 100%; }
       .mdlb-pod-meta {
-        display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
-        margin-top: 7px; font-size: 10px; color: var(--mdlb-ink3);
+        display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+        margin-top: 8px; font-size: 11.5px; color: var(--mdlb-ink3);
       }
       /* ---------- 章节编号 + 发丝线 ---------- */
       .mdlb-sec {
@@ -631,28 +651,28 @@ window.__ModuleLoader__.load({
         align-items: center;
         gap: 12px;
         margin: 22px 0 0;
-        min-height: 16px;
+        min-height: 18px;
       }
       .mdlb-sec .mdlb-sec-no {
-        font-size: 10.5px; font-weight: 650; letter-spacing: .1em;
+        font-size: 11.5px; font-weight: 650; letter-spacing: .08em;
         color: var(--mdlb-accent); font-variant-numeric: tabular-nums;
       }
       .mdlb-sec .mdlb-sec-ttl {
-        font-size: 10px; letter-spacing: .17em; text-transform: uppercase;
+        font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase;
         color: var(--mdlb-ink2); white-space: nowrap;
       }
       .mdlb-sec .mdlb-sec-line { flex: 1; height: 1px; background: var(--mdlb-rule); }
       .mdlb-sec .mdlb-sec-rt {
-        font-size: 10.5px; color: var(--mdlb-ink3); letter-spacing: .03em; white-space: nowrap;
+        font-size: 11.5px; color: var(--mdlb-ink3); letter-spacing: .02em; white-space: nowrap;
       }
 
       .mdlb-actions { display: flex; align-items: center; gap: 12px; flex: none; }
       .mdlb-time {
         display: inline-flex; align-items: center; gap: 6px;
-        color: var(--mdlb-ink3); font-size: 11px;
-        font-variant-numeric: tabular-nums; letter-spacing: .02em;
-        /* 这行正好落在右上角蓝网点的区域里：蓝点压灰点后，11px 的次级文字
-           只剩 1.8:1。给它一块纸底，点和字各归各位，不必为了字把网点调淡 */
+        color: var(--mdlb-ink3); font-size: 12px;
+        font-variant-numeric: tabular-nums; letter-spacing: .01em;
+        /* 这行正好落在右上角蓝网点的区域里：蓝点压灰点后，次级文字容易被网点干扰。
+           给它一块纸底，点和字各归各位，不必为了字把网点调淡 */
         background: var(--dsw-alias-bg-base);
         padding: 3px 7px;
         margin: -3px -7px;
@@ -667,10 +687,13 @@ window.__ModuleLoader__.load({
         appearance: none; display: inline-flex; align-items: center; gap: 5px;
         border: 1px solid var(--mdlb-rule-2); border-radius: 0;
         background: transparent; color: var(--mdlb-ink);
-        font: inherit; font-size: 11.5px; font-weight: 500;
-        padding: 4px 10px; cursor: pointer;
+        font: inherit; font-size: 12.5px; font-weight: 500;
+        padding: 5px 11px; cursor: pointer;
         transition: color .12s ease, border-color .12s ease, background .12s ease;
       }
+      .mdlb-btn svg { flex: none; }
+      .mdlb-btn[data-busy="true"] svg { animation: mdlb-spin .9s linear infinite; }
+      @keyframes mdlb-spin { to { transform: rotate(360deg); } }
       .mdlb-btn:hover:not(:disabled) {
         color: var(--mdlb-accent);
         border-color: var(--mdlb-accent);
@@ -682,7 +705,7 @@ window.__ModuleLoader__.load({
       .mdlb-tabs {
         display: flex;
         flex-wrap: wrap;
-        gap: 0 20px;
+        gap: 0 22px;
         align-self: stretch;
         margin: 14px 0 0;
         padding: 0;
@@ -692,8 +715,8 @@ window.__ModuleLoader__.load({
       }
       .mdlb-tab {
         appearance: none; border: 0; background: none;
-        color: var(--mdlb-ink2); font: inherit; font-size: 12.5px;
-        padding: 0 0 9px; margin-bottom: -1px;
+        color: var(--mdlb-ink2); font: inherit; font-size: 13.5px;
+        padding: 0 0 10px; margin-bottom: -1px;
         border-bottom: 2px solid transparent;
         cursor: pointer;
         transition: color .12s ease, border-color .12s ease;
@@ -708,9 +731,9 @@ window.__ModuleLoader__.load({
       /* ---------- 提示条 ---------- */
       .mdlb-banner {
         display: flex; align-items: center; flex-wrap: wrap; gap: 2px;
-        margin: 12px 0 0; padding: 7px 11px;
+        margin: 12px 0 0; padding: 8px 12px;
         border: 0; border-left: 2px solid var(--dsw-alias-state-error-primary);
-        border-radius: 0; font-size: 12px;
+        border-radius: 0; font-size: 13px;
         color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 76%, var(--mdlb-ink));
         background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 7%, transparent);
       }
@@ -774,22 +797,23 @@ window.__ModuleLoader__.load({
         text-align: right; white-space: nowrap;
         background: var(--dsw-alias-bg-base);
         color: var(--mdlb-ink3);
-        font-weight: 500;
-        font-size: 10px;
-        letter-spacing: .15em;
+        font-weight: 560;
+        font-size: 11.5px;
+        letter-spacing: .07em;
         text-transform: uppercase;
-        padding: 8px 9px;
+        padding: 9px 8px;
         border-bottom: 1px solid var(--mdlb-rule-2);
       }
       .mdlb-table th[data-sortable="true"] { cursor: pointer; transition: color .12s ease; }
       .mdlb-table th[data-sortable="true"]:hover { color: var(--mdlb-ink); }
       .mdlb-table th[data-active="true"] { color: var(--mdlb-accent); }
       .mdlb-table td {
-        padding: 8px 9px;
+        padding: 10px 8px;
         border-bottom: 1px solid var(--mdlb-rule);
         text-align: right;
         white-space: nowrap;
-        font-size: 13px;
+        font-size: 14px;
+        line-height: 1.45;
       }
       .mdlb-table tbody tr:nth-child(even) td { background: transparent; }
       .mdlb-table tbody tr:hover td { background: var(--mdlb-wash); }
@@ -797,11 +821,12 @@ window.__ModuleLoader__.load({
       .mdlb-table tbody tr:last-child td { border-bottom: 0; }
       .mdlb-table th.mdlb-left, .mdlb-table td.mdlb-left { text-align: left; }
 
-      .mdlb-rank { width: 1%; min-width: 54px; color: var(--mdlb-ink3); font-size: 11px; }
+      .mdlb-rank { width: 1%; min-width: 56px; color: var(--mdlb-ink3); font-size: 12px; }
+      .mdlb-table:not([data-wide="true"]) .mdlb-rank { box-sizing: border-box; width: 72px; min-width: 72px; }
       .mdlb-rank span {
-        display: inline-block; min-width: 22px;
+        display: inline-block; min-width: 24px;
         font-variant-numeric: tabular-nums;
-        letter-spacing: .06em;
+        letter-spacing: .04em;
         transition: color .12s ease;
       }
       /* hover 只换颜色，不做位移，瑞士版面里行不能跳 */
@@ -812,8 +837,8 @@ window.__ModuleLoader__.load({
         background: none;
       }
 
-      /* 加了「发布」列后 11 列在 1240 宽会溢出 18px：模型列不再吃掉全部余量，
-         留 168px 给标签、其余让给数字列，这样表宽自然落在可视区内 */
+      /* 加了「发布」列后 11 列在 1240 宽易溢出：模型列留 168px 给标签、其余让给数字列，
+         同时收紧表头字距与列内边距，确保 14px 字号下 11 列仍稳稳落在可视区内 */
       .mdlb-name { display: flex; align-items: center; gap: 6px; min-width: 168px; max-width: 300px; }
       .mdlb-name > a, .mdlb-name > span:not(.mdlb-chip) {
         overflow: hidden; text-overflow: ellipsis; min-width: 0;
@@ -829,11 +854,11 @@ window.__ModuleLoader__.load({
       /* 胶囊：零圆角的小标签，只作标注，不作装饰 */
       .mdlb-chip {
         display: inline-block;
-        padding: 0 5px;
+        padding: 1px 5px;
         border: 1px solid var(--mdlb-rule-w);
         border-radius: 0;
-        font-size: 10.5px; line-height: 16px;
-        letter-spacing: .02em;
+        font-size: 11.5px; line-height: 1.45;
+        letter-spacing: .01em;
         color: var(--mdlb-ink2);
         background: transparent;
       }
@@ -843,9 +868,8 @@ window.__ModuleLoader__.load({
         background: var(--mdlb-accent-wash);
         font-weight: 600;
       }
-      /* 「新」在表格里紧贴模型名，6px 会被读成名字的一部分：左移 4px（合计 10px 视觉间隔），
-         内边距从 5px 收到 3px，整体占位仍是 28.7px，列宽与截断数一格不变 */
-      .mdlb-name .mdlb-chip[data-tone="new"] { margin-left: 4px; padding: 0 3px; }
+      /* 「新」在表格里紧贴模型名，左移 4px 视觉隔离；内边距略收避免过宽 */
+      .mdlb-name .mdlb-chip[data-tone="new"] { margin-left: 4px; padding: 1px 4px; }
       .mdlb-chip[data-tone="short"] {
         color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 76%, var(--mdlb-ink));
         border-color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 46%, transparent);
@@ -858,7 +882,7 @@ window.__ModuleLoader__.load({
         background: transparent;
       }
       .mdlb-unknown-tag {
-        font-size: 10px; padding: 0 5px; line-height: 15px;
+        font-size: 11.5px; padding: 1px 5px; line-height: 1.4;
         border: 1px dashed var(--mdlb-rule-w);
         border-radius: 0;
         white-space: nowrap;
@@ -872,10 +896,11 @@ window.__ModuleLoader__.load({
       }
       .mdlb-bar {
         display: inline-block;
-        width: 38px; height: 3px;
+        width: 34px; height: 3px;
         border-radius: 0;
         background: color-mix(in srgb, var(--mdlb-ink) 10%, transparent);
         overflow: hidden;
+        contain: layout style;
       }
       .mdlb-bar > i {
         display: block; height: 100%; border-radius: 0;
@@ -885,10 +910,11 @@ window.__ModuleLoader__.load({
         /* backwards 而不是 both：动画结束就交还原样式，
            不会留下一个恒等 transform 给整行建 stacking context */
         animation: mdlb-grow .34s cubic-bezier(.22, 1, .36, 1) backwards;
+        transition: width .28s cubic-bezier(.22, 1, .36, 1), background-color .2s ease;
       }
       .mdlb-main-score { font-weight: 650; }
-      .mdlb-main-score .mdlb-bar { width: 50px; height: 4px; }
-      /* 新两榜的次级列：主分保留 50×4 的权重量级，理解/输出/稳定率等降到 30×2 */
+      .mdlb-main-score .mdlb-bar { width: 46px; height: 4px; }
+      /* 新两榜的次级列：主分保留 46×4 的权重量级，理解/输出/稳定率等降到 30×2 */
       .mdlb-bar--sub { width: 30px; height: 2px; }
       .mdlb-muted { color: var(--mdlb-ink3); }
 
@@ -897,7 +923,7 @@ window.__ModuleLoader__.load({
         flex: 1; display: flex; flex-direction: column;
         align-items: flex-start; justify-content: flex-start;
         gap: 6px; padding: 56px 0 40px;
-        color: var(--mdlb-ink2); font-size: 13px;
+        color: var(--mdlb-ink2); font-size: 14px;
         text-align: left;
         border-top: 1px solid var(--mdlb-rule-2);
         margin-top: 12px;
@@ -906,15 +932,17 @@ window.__ModuleLoader__.load({
       .mdlb-empty > .mdlb-empty-title,
       .mdlb-empty > span:first-child {
         color: var(--mdlb-ink);
-        font-size: 19px; font-weight: 500; letter-spacing: -.01em;
+        font-size: 20px; font-weight: 500; letter-spacing: -.01em;
         line-height: 1.4;
+        text-wrap: balance;
       }
       .mdlb-empty > span {
-        color: var(--mdlb-ink2); font-size: 12.5px; line-height: 1.7;
+        color: var(--mdlb-ink2); font-size: 13.5px; line-height: 1.7;
         max-width: 42em;
+        text-wrap: pretty;
       }
       .mdlb-empty-cell { padding: 0 !important; border-bottom: 0 !important; }
-      /* 新两榜的空态：发丝线拉满整行，标题回到 19px、提示回到 12.5px。
+      /* 新两榜的空态：发丝线拉满整行，标题回到 20px、提示回到 13.5px。
          旧的空态结构不动（仍是原来的短横线），只在这里收口 */
       .mdlb-empty--board { max-width: none; padding-top: 34px; }
 
@@ -926,8 +954,8 @@ window.__ModuleLoader__.load({
       }
       .mdlb-provider {
         appearance: none; cursor: pointer; font: inherit;
-        font-size: 11.5px; letter-spacing: .02em;
-        padding: 2px 0 6px;
+        font-size: 12.5px; letter-spacing: .01em;
+        padding: 3px 0 7px;
         border: 0; border-radius: 0;
         border-bottom: 2px solid transparent;
         color: var(--mdlb-ink2);
@@ -942,39 +970,39 @@ window.__ModuleLoader__.load({
         background: none;
       }
       .mdlb-caption {
-        color: var(--mdlb-ink3); font-size: 10.5px; margin: 0;
-        white-space: nowrap; letter-spacing: .02em;
+        color: var(--mdlb-ink3); font-size: 11.5px; margin: 0;
+        white-space: nowrap; letter-spacing: .01em;
       }
       @media (max-width: 1180px) { .mdlb-caption { display: none; } }
 
       /* 「全部」视图里每家一段：段与段之间用发丝线断开，标题左对齐 */
-      .mdlb-quota-block { border-top: 1px solid var(--mdlb-rule); padding: 14px 16px 0; }
-      .mdlb-quota-block:first-of-type { border-top: 0; padding-top: 4px; }
-      .mdlb-quota-block .mdlb-caption { margin: 0 0 6px; }
+      .mdlb-quota-block { border-top: 1px solid var(--mdlb-rule); padding: 16px 16px 0; }
+      .mdlb-quota-block:first-of-type { border-top: 0; padding-top: 6px; }
+      .mdlb-quota-block .mdlb-caption { margin: 0 0 8px; }
       .mdlb-quota-title {
-        display: flex; align-items: baseline; gap: 2px;
-        margin: 0 0 8px; font-size: 11px; letter-spacing: .04em;
+        display: flex; align-items: baseline; gap: 4px;
+        margin: 0 0 8px; font-size: 12.5px; letter-spacing: .02em;
         color: var(--mdlb-ink3);
       }
-      .mdlb-quota-title b { color: var(--mdlb-ink); font-weight: 600; letter-spacing: .02em; }
+      .mdlb-quota-title b { color: var(--mdlb-ink); font-weight: 600; letter-spacing: .01em; }
       /* 日期列只占 5 个字符，不参与拉伸 */
       .mdlb-date { white-space: nowrap; font-variant-numeric: tabular-nums; width: 1%; }
 
-      .mdlb-plan-head { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+      .mdlb-plan-head { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
       .mdlb-plan-name { font-weight: 550; color: var(--mdlb-ink); }
-      .mdlb-plan-price { color: var(--mdlb-ink3); font-size: 10px; font-weight: 400; letter-spacing: .02em; }
-      .mdlb-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-      .mdlb-cell b { font-weight: 600; font-size: 13px; }
-      .mdlb-cell small { color: var(--mdlb-ink3); font-size: 10px; }
+      .mdlb-plan-price { color: var(--mdlb-ink3); font-size: 11.5px; font-weight: 400; letter-spacing: .01em; }
+      .mdlb-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+      .mdlb-cell b { font-weight: 600; font-size: 14px; }
+      .mdlb-cell small { color: var(--mdlb-ink3); font-size: 11.5px; }
 
       .mdlb-toolbar-left, .mdlb-toolbar-right {
         display: flex; flex-wrap: wrap; align-items: center;
         gap: 6px; min-width: 0;
       }
       .mdlb-count {
-        color: var(--mdlb-ink3); font-size: 11px;
+        color: var(--mdlb-ink3); font-size: 12px;
         font-variant-numeric: tabular-nums; white-space: nowrap;
-        letter-spacing: .02em;
+        letter-spacing: .01em;
       }
       .mdlb-toolbar-left .mdlb-count {
         margin-left: 2px; padding-left: 11px;
@@ -988,11 +1016,11 @@ window.__ModuleLoader__.load({
         border-radius: 0;
         background: transparent;
         color: var(--mdlb-ink);
-        font: inherit; font-size: 12px;
-        padding: 5px 9px;
+        font: inherit; font-size: 13px;
+        padding: 6px 10px;
         outline: none;
       }
-      .mdlb-search { width: 190px; }
+      .mdlb-search { width: 196px; }
       .mdlb-search::placeholder { color: var(--mdlb-ink3); }
       .mdlb-search:focus, .mdlb-select:focus, .mdlb-num:focus {
         border-color: var(--mdlb-accent);
@@ -1006,17 +1034,17 @@ window.__ModuleLoader__.load({
       .mdlb-field {
         display: inline-flex; align-items: center; gap: 6px;
         min-width: 0;
-        font-size: 11px; color: var(--mdlb-ink2); white-space: nowrap;
-        letter-spacing: .04em;
+        font-size: 12px; color: var(--mdlb-ink2); white-space: nowrap;
+        letter-spacing: .02em;
       }
       .mdlb-field + .mdlb-field { margin-left: 12px; }
-      .mdlb-affix { color: var(--mdlb-ink); font-size: 11.5px; }
-      .mdlb-optional { color: var(--mdlb-ink3); font-size: 10.5px; }
+      .mdlb-affix { color: var(--mdlb-ink); font-size: 12.5px; }
+      .mdlb-optional { color: var(--mdlb-ink3); font-size: 11.5px; }
       .mdlb-field > .mdlb-num + .mdlb-affix { margin-left: 1px; }
-      .mdlb-note { color: var(--mdlb-ink3); font-size: 11px; }
+      .mdlb-note { color: var(--mdlb-ink3); font-size: 12px; }
       .mdlb-notice {
         display: inline-flex; align-items: center; gap: 5px;
-        font-size: 10.5px; padding: 1px 7px;
+        font-size: 11.5px; padding: 2px 7px;
         border: 1px solid var(--mdlb-accent);
         border-radius: 0; white-space: nowrap;
         color: var(--mdlb-accent);
@@ -1033,11 +1061,12 @@ window.__ModuleLoader__.load({
       }
       .mdlb-seg-btn {
         appearance: none; border: 0; background: none; white-space: nowrap;
-        color: var(--mdlb-ink2); font: inherit; font-size: 11px;
-        letter-spacing: .03em;
-        padding: 3px 8px 6px; margin-bottom: -1px;
+        color: var(--mdlb-ink2); font: inherit; font-size: 12px;
+        letter-spacing: .02em;
+        padding: 4px 9px 7px; margin-bottom: -1px;
         border-bottom: 2px solid transparent;
         border-radius: 0; cursor: pointer;
+        transition: color .12s ease, border-color .12s ease;
       }
       .mdlb-seg-btn:hover { color: var(--mdlb-ink); }
       .mdlb-seg-btn[data-active="true"] {
@@ -1048,19 +1077,19 @@ window.__ModuleLoader__.load({
         box-shadow: none;
       }
       .mdlb-rate {
-        color: var(--mdlb-ink3); font-size: 10.5px;
+        color: var(--mdlb-ink3); font-size: 11.5px;
         font-variant-numeric: tabular-nums; white-space: nowrap;
-        letter-spacing: .02em;
+        letter-spacing: .01em;
       }
-      .mdlb-plan-cell { display: flex; flex-direction: column; gap: 1px; min-width: 170px; }
-      .mdlb-plan-meta { color: var(--mdlb-ink2); font-size: 10.5px; }
+      .mdlb-plan-cell { display: flex; flex-direction: column; gap: 2px; min-width: 170px; }
+      .mdlb-plan-meta { color: var(--mdlb-ink2); font-size: 11.5px; }
 
       /* 汇总行：编号章节同款的分隔，不用色块 */
       .mdlb-summary {
         display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px;
-        padding: 9px 0 8px;
+        padding: 10px 0 9px;
         border-bottom: 1px solid var(--mdlb-rule);
-        font-size: 12.5px; color: var(--mdlb-ink2);
+        font-size: 13.5px; color: var(--mdlb-ink2);
       }
       .mdlb-summary b {
         color: var(--mdlb-accent);
@@ -1071,7 +1100,7 @@ window.__ModuleLoader__.load({
 
       /* 覆盖模型列 */
       .mdlb-cover {
-        display: flex; flex-wrap: wrap; gap: 4px 6px;
+        display: flex; flex-wrap: wrap; gap: 5px 6px;
         justify-content: flex-start; align-content: flex-start;
         width: 100%; min-width: 300px;
       }
@@ -1088,13 +1117,19 @@ window.__ModuleLoader__.load({
         width: 54px; height: 3px; border-radius: 0; overflow: hidden;
         background: color-mix(in srgb, var(--mdlb-ink) 11%, transparent);
         display: inline-block; vertical-align: middle;
+        contain: layout style;
       }
-      .mdlb-mini > i { display: block; height: 100%; background: var(--mdlb-accent); }
+      .mdlb-mini > i {
+        display: block; height: 100%; background: var(--mdlb-accent);
+        transform-origin: left center;
+        animation: mdlb-grow .34s cubic-bezier(.22, 1, .36, 1) backwards;
+        transition: width .28s cubic-bezier(.22, 1, .36, 1), background-color .2s ease;
+      }
       .mdlb-mini[data-tone="bad"] > i { background: var(--dsw-alias-state-error-primary); }
       .mdlb-enough { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
       .mdlb-enough > * { flex: none; }
       .mdlb-badpill {
-        font-size: 10.5px; padding: 0 6px; line-height: 16px;
+        font-size: 11.5px; padding: 1px 6px; line-height: 1.45;
         border: 1px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 46%, transparent);
         border-radius: 0; white-space: nowrap;
         color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 76%, var(--mdlb-ink));
@@ -1106,21 +1141,21 @@ window.__ModuleLoader__.load({
         border: 1px dashed var(--mdlb-rule-w);
       }
       .mdlb-goods {
-        font-size: 11px; color: var(--mdlb-ink2);
+        font-size: 12px; color: var(--mdlb-ink2);
         font-variant-numeric: tabular-nums;
       }
       .mdlb-rowbtn {
         appearance: none; border: 0; padding: 0; background: none; cursor: pointer;
-        font: inherit; font-size: 10.5px; color: var(--mdlb-accent);
+        font: inherit; font-size: 11.5px; color: var(--mdlb-accent);
         text-decoration: underline; text-underline-offset: 2px;
-        letter-spacing: .02em;
+        letter-spacing: .01em;
       }
       /* 新两榜的行内展开：去掉下划线，降到次级灰，箭头只在悬停/展开时上强调色。
          文案仍是「展开维度」，但不再跟数据抢蓝 */
       .mdlb-axisbtn {
-        appearance: none; border: 0; padding: 1px 0; margin: 0; background: none;
+        appearance: none; border: 0; padding: 2px 0; margin: 0; background: none;
         display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;
-        font: inherit; font-size: 10.5px; letter-spacing: .02em;
+        font: inherit; font-size: 11.5px; letter-spacing: .01em;
         color: var(--mdlb-ink3); cursor: pointer;
         transition: color .12s ease;
       }
@@ -1148,16 +1183,35 @@ window.__ModuleLoader__.load({
       .mdlb-detail td {
         background: var(--mdlb-wash);
         border-bottom: 1px solid var(--mdlb-rule);
+        padding: 0;
       }
       .mdlb-detail td + td { border-bottom: 0; }
-      .mdlb-detail-list { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 7px 11px 9px; }
+      .mdlb-detail-clip {
+        display: grid;
+        grid-template-rows: 1fr;
+        opacity: 1;
+        transition:
+          grid-template-rows .24s cubic-bezier(.22, 1, .36, 1),
+          opacity .18s ease-out;
+      }
+      .mdlb-detail-inner {
+        min-height: 0;
+        overflow: hidden;
+      }
+      @starting-style {
+        .mdlb-detail-clip {
+          grid-template-rows: 0fr;
+          opacity: 0;
+        }
+      }
+      .mdlb-detail-list { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 10px 12px 12px; }
       .mdlb-detail-item {
-        display: inline-flex; align-items: baseline; gap: 4px;
-        font-size: 11px; color: var(--mdlb-ink2);
+        display: inline-flex; align-items: baseline; gap: 5px;
+        font-size: 12px; color: var(--mdlb-ink2);
         font-variant-numeric: tabular-nums;
       }
       .mdlb-detail-item > span:first-child { margin-right: 2px; }
-      .mdlb-detail-item b { font-size: 12px; font-weight: 600; color: var(--mdlb-ink); font-variant-numeric: tabular-nums; }
+      .mdlb-detail-item b { font-size: 13px; font-weight: 600; color: var(--mdlb-ink); font-variant-numeric: tabular-nums; }
       .mdlb-detail-item[data-bad="true"] b {
         color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 78%, var(--mdlb-ink));
       }
@@ -1168,8 +1222,8 @@ window.__ModuleLoader__.load({
       .mdlb-axis-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 5px 22px;
-        padding: 9px 11px 11px;
+        gap: 8px 24px;
+        padding: 11px 12px 13px;
       }
       @container (max-width: 780px) {
         .mdlb-axis-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1179,17 +1233,18 @@ window.__ModuleLoader__.load({
       @container (min-width: 940px) {
         .mdlb-table--axes th:nth-child(2) { width: 30%; }
       }
-      .mdlb-axis-rule { grid-column: 1 / -1; height: 1px; background: var(--mdlb-rule); margin: 4px 0 1px; }
+      .mdlb-axis-rule { grid-column: 1 / -1; height: 1px; background: var(--mdlb-rule); margin: 4px 0 2px; }
       .mdlb-axis {
         display: grid;
-        grid-template-columns: 72px minmax(0, 1fr) 32px;
+        grid-template-columns: 78px minmax(0, 1fr) 36px;
         align-items: center; gap: 8px;
-        font-size: 11px; color: var(--mdlb-ink2);
+        font-size: 12px; color: var(--mdlb-ink2);
         font-variant-numeric: tabular-nums;
       }
       .mdlb-axis > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .mdlb-axis .mdlb-bar { width: 100%; height: 2px; }
-      .mdlb-axis > b { text-align: right; font-weight: 600; font-size: 11.5px; color: var(--mdlb-ink); }
+      .mdlb-axis .mdlb-bar > i { animation-delay: calc(var(--axis-i, 0) * 24ms + 40ms); }
+      .mdlb-axis > b { text-align: right; font-weight: 600; font-size: 12.5px; color: var(--mdlb-ink); }
 
       /* 骨架 */
       .mdlb-skel {
@@ -1231,7 +1286,12 @@ window.__ModuleLoader__.load({
       /* 动效全关：偏好减动效时保留最终态（动画 both 的终态就是原样式） */
       @media (prefers-reduced-motion: reduce) {
         .mdlb-skel { animation: none; opacity: .62; }
+        .mdlb-btn[data-busy="true"] svg { animation-duration: 3.6s; }
         .mdlb-bar > i,
+        .mdlb-mini > i,
+        .mdlb-detail-clip { transition: none; }
+        .mdlb-bar > i,
+        .mdlb-mini > i,
         .mdlb-main,
         .mdlb-table tbody tr,
         .mdlb-pod,
@@ -1280,27 +1340,28 @@ window.__ModuleLoader__.load({
       }
 
       @media (max-width: 900px) {
-        /* 窄面板：刊头矮一档（136 vs 151），标题带整条也短 24px。
-           不覆盖的话 560 宽会用 360px 的带，多盖出约 24px 到「第 4 名之后」下面 */
-        .mdlb-root { --mdlb-band-h: 336px; }
+        /* 窄面板：刊头矮一档，标题带整条也同步收短到 348px */
+        .mdlb-root { --mdlb-band-h: 348px; }
+        .mdlb-tabs { gap: 6px 13px; }
+        .mdlb-tab { font-size: 12.5px; }
         .mdlb-lede b { font-size: 40px; }
-        .mdlb-lede em { font-size: 14px; }
+        .mdlb-lede em { font-size: 14.5px; }
         .mdlb-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .mdlb-kpi { padding: 12px 0 11px; }
         .mdlb-kpi + .mdlb-kpi { padding-left: 14px; }
         .mdlb-kpi .mdlb-kpi-n { font-size: 34px; }
         .mdlb-kpi .mdlb-kpi-l {
-          margin-top: 7px; font-size: 9px; letter-spacing: .1em;
+          margin-top: 7px; font-size: 10.5px; letter-spacing: .07em;
           white-space: normal; overflow: visible; line-height: 1.35;
         }
         /* 窄面板里大字报会吃掉首屏，改成前三名单行紧凑条，第 4~6 名藏在完整榜单里 */
         .mdlb-podium { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .mdlb-pod { padding: 9px 10px 10px 0; border-top: 0 !important; }
+        .mdlb-pod { padding: 10px 10px 11px 0; border-top: 0 !important; }
         .mdlb-pod:nth-child(n+4) { display: none; }
         .mdlb-pod:not(:first-child) { padding-left: 10px; }
         .mdlb-pod:nth-child(2n) { border-right: 1px solid var(--mdlb-rule); }
         .mdlb-pod:nth-child(3n) { border-right: 0; padding-left: 10px; }
-        .mdlb-pod-name { white-space: nowrap; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+        .mdlb-pod-name { white-space: nowrap; font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
         .mdlb-pod-score b, .mdlb-pod[data-top="true"] .mdlb-pod-score b { font-size: 24px; }
         .mdlb-pod-unit { display: none; }
         .mdlb-pod-detail { display: none; }
@@ -1919,18 +1980,20 @@ window.__ModuleLoader__.load({
                     expanded
                       ? h('tr', { key: row.key + ':axes', className: 'mdlb-detail' },
                         h('td', { colSpan: span, className: 'mdlb-left' },
-                          h('div', { className: 'mdlb-axis-grid' },
-                            detail.map((item, index) => [
-                              axisGroup > 0 && index === axisGroup
-                                ? h('div', { key: item.label + ':rule', className: 'mdlb-axis-rule', 'aria-hidden': true })
-                                : null,
-                              h('div', { key: item.label, className: 'mdlb-axis' },
-                                h('span', null, item.label),
-                                h('i', { className: 'mdlb-bar', 'data-tone': tone(item.score) },
-                                  h('i', { style: { width: percent(item.score) } })),
-                                h('b', null, item.value),
-                              ),
-                            ]))))
+                          h('div', { className: 'mdlb-detail-clip' },
+                            h('div', { className: 'mdlb-detail-inner' },
+                              h('div', { className: 'mdlb-axis-grid' },
+                                detail.map((item, index) => [
+                                  axisGroup > 0 && index === axisGroup
+                                    ? h('div', { key: item.label + ':rule', className: 'mdlb-axis-rule', 'aria-hidden': true })
+                                    : null,
+                                  h('div', { key: item.label, className: 'mdlb-axis' },
+                                    h('span', null, item.label),
+                                    h('i', { className: 'mdlb-bar', 'data-tone': tone(item.score) },
+                                      h('i', { style: { width: percent(item.score), '--axis-i': index } })),
+                                    h('b', null, item.value),
+                                  ),
+                                ]))))))
                       : null,
                   ]
                 })),
@@ -2366,7 +2429,7 @@ window.__ModuleLoader__.load({
                   const ratio = usageYi === null || known.length === 0 ? 0 : okCount / known.length
                   const expanded = open === entry.id
                   return [
-                    h('tr', { key: entry.id, style: { '--i': i } },
+                    h('tr', { key: entry.id, style: { '--i': i }, 'data-open': String(expanded) },
                       h('td', { className: 'mdlb-left' }, entry.provider),
                       h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-plan-cell' },
                         h('span', { className: 'mdlb-plan-name' }, entry.plan),
@@ -2395,6 +2458,7 @@ window.__ModuleLoader__.load({
                             : null,
                           h('button', {
                             className: 'mdlb-rowbtn',
+                            'aria-expanded': String(expanded),
                             onClick: () => setOpen(expanded ? null : entry.id),
                           }, expanded ? t('collapseDetail') : t('expandDetail')),
                         ))
@@ -2403,24 +2467,25 @@ window.__ModuleLoader__.load({
                     expanded
                       ? h('tr', { key: entry.id + ':detail', className: 'mdlb-detail' },
                         h('td', { colSpan: usageYi !== null ? 4 : 3, className: 'mdlb-left' },
-                          h('div', { className: 'mdlb-detail-list' },
-                            entry.models.map(m => {
-                              const known = m.quotaKnown !== false
-                              const months = (usageYi === null || !known) ? null : m.quota / usageYi
-                              const bad = months !== null && months < 1
-                              return h('span', { key: m.model, className: 'mdlb-detail-item', 'data-bad': String(bad), 'data-unknown': String(!known) },
-                                h('span', null, m.model),
-                                known
-                                  ? h('b', null, '≈ ' + formatYi(m.quota) + ' 亿/月')
-                                  : h('span', { className: 'mdlb-unknown-tag' }, t('quotaUnknown')),
-                                months !== null
-                                  ? h('span', { className: 'mdlb-goods' },
-                                    months >= 1 ? t('monthsValue', { v: Math.floor(months) }) : t('monthsValue', { v: months.toFixed(2) }))
-                                  : null,
-                              )
-                            }),
-                          ),
-                        ))
+                          h('div', { className: 'mdlb-detail-clip' },
+                            h('div', { className: 'mdlb-detail-inner' },
+                              h('div', { className: 'mdlb-detail-list' },
+                                entry.models.map(m => {
+                                  const known = m.quotaKnown !== false
+                                  const months = (usageYi === null || !known) ? null : m.quota / usageYi
+                                  const bad = months !== null && months < 1
+                                  return h('span', { key: m.model, className: 'mdlb-detail-item', 'data-bad': String(bad), 'data-unknown': String(!known) },
+                                    h('span', null, m.model),
+                                    known
+                                      ? h('b', null, '≈ ' + formatYi(m.quota) + ' 亿/月')
+                                      : h('span', { className: 'mdlb-unknown-tag' }, t('quotaUnknown')),
+                                    months !== null
+                                      ? h('span', { className: 'mdlb-goods' },
+                                        months >= 1 ? t('monthsValue', { v: Math.floor(months) }) : t('monthsValue', { v: months.toFixed(2) }))
+                                      : null,
+                                  )
+                                }),
+                              )))))
                       : null,
                   ]
                 })),
@@ -2445,6 +2510,303 @@ window.__ModuleLoader__.load({
     /** Translate function bound by `apply`; the slot also passes its own `t` prop. */
     let translate = key => key
 
+    function smoothstep(edge0, edge1, x) {
+      const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)))
+      return t * t * (3 - 2 * t)
+    }
+
+    function isRootDark(root) {
+      if (root.closest('[data-ds-dark-theme], .mdlb-dark') || root.matches('[data-theme="dark"]')) return true
+      const bg = window.getComputedStyle(root).backgroundColor
+      const m = bg && bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+      if (!m) return false
+      return (0.299 * Number(m[1]) + 0.587 * Number(m[2]) + 0.114 * Number(m[3])) < 128
+    }
+
+    function readHalftonePalette(root) {
+      const dark = isRootDark(root)
+      return {
+        dotRgb: dark ? [255, 255, 255] : [0, 0, 0],
+        dotAlpha: dark ? 0.082 : 0.105,
+        accentRgb: dark ? [150, 176, 255] : [0, 47, 167],
+        accentMaxAlpha: dark ? 0.34 : 0.44,
+      }
+    }
+
+    /**
+     * 方案 C · 锁格光潮微扰：严格锁定 15px 印刷网格（零位移），
+     * 静止时从左下浅区往右上深蓝区缓缓推动双谐波光潮，鼠标滑过时中心柔和让位护字并荡出克莱因蓝波环。
+     */
+    function drawHalftoneDots(ctx, width, height, palette, state, now, reduced) {
+      const GAP = 15
+      const BASE_R = 2.0
+      ctx.clearRect(0, 0, width, height)
+
+      const cols = Math.ceil(width / GAP) + 2
+      const rows = Math.ceil(height / GAP) + 2
+      const [dr, dg, db] = palette.dotRgb
+      const [ar, ag, ab] = palette.accentRgb
+      const { ripples, pointer } = state
+
+      for (let row = 0; row < rows; row++) {
+        const gy = row * GAP + 7
+        const ny = gy / height
+        const vFade = 1 - smoothstep(0.60, 0.98, ny)
+        if (vFade <= 0.004) continue
+
+        for (let col = 0; col < cols; col++) {
+          const gx = col * GAP + 7
+          const nx = gx / width
+          const diagProgress = nx * 0.62 + (1 - ny) * 0.38
+          const densityMask = smoothstep(0.30, 0.92, diagProgress)
+          if (densityMask <= 0.004) continue
+
+          const blueZone = 1 - smoothstep(0.18, 1.0, Math.hypot((1 - nx) / 0.56, ny / 0.58))
+          const mask = densityMask * vFade
+
+          let scaleMod = 1
+          let blueMix = blueZone * 0.72
+          let alphaBoost = 1
+
+          if (!reduced) {
+            const proj = gx * 0.84 + (gy - height) * (-0.54)
+            const w1 = Math.sin(proj * 0.0155 - now * 0.88)
+            const w2 = Math.sin(proj * 0.0085 - now * 0.56 + nx * 1.25)
+            const ambientWave = w1 * 0.65 + w2 * 0.35
+            const crest = Math.max(0, ambientWave)
+
+            scaleMod = 1 + ambientWave * 0.44 * (0.45 + 0.55 * densityMask)
+            blueMix = blueZone * (0.72 + crest * 0.32) + crest * 0.06 * densityMask
+            alphaBoost = 1 + crest * 0.28
+
+            let waveHeight = 0
+            for (let k = 0; k < ripples.length; k++) {
+              const rp = ripples[k]
+              const age = now - rp.born
+              const dist = Math.hypot(gx - rp.x, gy - rp.y)
+              const front = age * 245
+              const behind = front - dist
+              if (behind > -28 && dist < 236) {
+                const env = Math.exp(-Math.pow((dist - front) / 34, 2))
+                  * Math.exp(-dist / 175)
+                  * Math.exp(-age / 1.4)
+                  * rp.power
+                if (env > 0.005) {
+                  waveHeight += (0.55 + 0.45 * Math.cos(behind * 0.029)) * env
+                }
+              }
+            }
+
+            if (pointer.hoverStrength > 0.01) {
+              const cdist = Math.hypot(gx - pointer.sx, gy - pointer.sy)
+              if (cdist < 84) {
+                const near = 1 - smoothstep(10, 84, cdist)
+                scaleMod *= 1 - near * 0.55 * pointer.hoverStrength
+              }
+            }
+
+            const clampedWave = Math.min(1.2, waveHeight)
+            scaleMod *= 1 + clampedWave * 0.75
+            blueMix = Math.min(1, blueMix + clampedWave * 0.80 * (0.45 + 0.55 * densityMask))
+          }
+
+          // 限制峰值点径与不透明度上限，避免多波叠加时网点粘连或压暗次级文本
+          const r = Math.min(3.8, Math.max(0.45, BASE_R * scaleMod))
+          const baseA = palette.dotAlpha * mask * alphaBoost
+          const blueA = palette.accentMaxAlpha * mask * blueMix
+          const finalA = Math.min(0.50, baseA * (1 - blueMix * 0.65) + blueA)
+          if (finalA <= 0.003) continue
+
+          const tBlue = Math.min(1, blueA / Math.max(0.0001, baseA + blueA))
+          const cr = Math.round(dr + (ar - dr) * tBlue)
+          const cg = Math.round(dg + (ag - dg) * tBlue)
+          const cb = Math.round(db + (ab - db) * tBlue)
+
+          ctx.fillStyle = `rgba(${cr},${cg},${cb},${finalA.toFixed(3)})`
+          ctx.beginPath()
+          ctx.arc(gx, gy, r, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
+    }
+
+    /** 浏览器运行期接管 .mdlb-paper 渲染波浪 Canvas；滚动离开或减动效时自动省电停帧。 */
+    function useHalftoneWave(rootRef, paperRef, canvasRef) {
+      useEffect(() => {
+        const root = rootRef.current
+        const paper = paperRef.current
+        const canvas = canvasRef.current
+        if (!root || !paper || !canvas || typeof window === 'undefined') return undefined
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return undefined
+
+        paper.setAttribute('data-canvas', 'active')
+        const reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const schemeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+
+        const state = {
+          width: 0,
+          height: 0,
+          palette: readHalftonePalette(root),
+          ripples: [],
+          pointer: { x: -9999, y: -9999, sx: -9999, sy: -9999, inside: false, lastX: -9999, lastY: -9999, hoverStrength: 0 },
+          frameId: 0,
+          lastTime: performance.now() / 1000,
+        }
+
+        const spawnRipple = (x, y, power) => {
+          state.ripples.push({ x, y, born: performance.now() / 1000, power: Math.min(1.3, Math.max(0.4, power)) })
+          if (state.ripples.length > 18) state.ripples.shift()
+        }
+
+        const resize = () => {
+          const rect = paper.getBoundingClientRect()
+          const w = Math.max(1, Math.floor(rect.width))
+          const h = Math.max(1, Math.floor(rect.height))
+          const dpr = Math.min(window.devicePixelRatio || 1, 2)
+          state.width = w
+          state.height = h
+          canvas.width = w * dpr
+          canvas.height = h * dpr
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+          if (reduceQuery.matches) {
+            drawHalftoneDots(ctx, w, h, state.palette, state, 0, true)
+          }
+        }
+
+        const isBandVisible = () => !document.hidden && root.scrollTop <= state.height + 12
+
+        const stopLoop = () => {
+          if (state.frameId) {
+            window.cancelAnimationFrame(state.frameId)
+            state.frameId = 0
+          }
+        }
+
+        const tick = (nowMs) => {
+          state.frameId = 0
+          if (reduceQuery.matches || !isBandVisible()) return
+          const now = nowMs / 1000
+          const dt = Math.min(0.033, Math.max(0.001, now - state.lastTime))
+          state.lastTime = now
+
+          const p = state.pointer
+          if (p.inside) {
+            const lerp = 1 - Math.exp(-16 * dt)
+            p.sx += (p.x - p.sx) * lerp
+            p.sy += (p.y - p.sy) * lerp
+            p.hoverStrength += (1 - p.hoverStrength) * (1 - Math.exp(-10 * dt))
+          } else {
+            p.hoverStrength += (0 - p.hoverStrength) * (1 - Math.exp(-5 * dt))
+          }
+          while (state.ripples.length && (now - state.ripples[0].born) > 1.8) state.ripples.shift()
+
+          drawHalftoneDots(ctx, state.width, state.height, state.palette, state, now, false)
+          state.frameId = window.requestAnimationFrame(tick)
+        }
+
+        const startOrRender = () => {
+          if (reduceQuery.matches) {
+            stopLoop()
+            state.ripples.length = 0
+            state.pointer.inside = false
+            state.pointer.hoverStrength = 0
+            drawHalftoneDots(ctx, state.width, state.height, state.palette, state, 0, true)
+            return
+          }
+          if (!state.frameId && isBandVisible()) {
+            state.lastTime = performance.now() / 1000
+            state.frameId = window.requestAnimationFrame(tick)
+          }
+        }
+
+        const toBandPoint = event => {
+          const box = paper.getBoundingClientRect()
+          return { x: event.clientX - box.left, y: event.clientY - box.top }
+        }
+
+        const onMove = event => {
+          if (reduceQuery.matches) return
+          const { x, y } = toBandPoint(event)
+          if (y > state.height + 48) {
+            state.pointer.inside = false
+            return
+          }
+          const p = state.pointer
+          p.x = x
+          p.y = y
+          if (!p.inside) {
+            p.sx = x
+            p.sy = y
+            p.lastX = x
+            p.lastY = y
+            p.inside = true
+            spawnRipple(x, y, 0.72)
+          } else {
+            const dist = Math.hypot(x - p.lastX, y - p.lastY)
+            if (dist >= 16) {
+              spawnRipple(x, y, 0.48 + Math.min(0.82, dist / 45))
+              p.lastX = x
+              p.lastY = y
+            }
+          }
+        }
+
+        const onDown = event => {
+          if (reduceQuery.matches) return
+          const { x, y } = toBandPoint(event)
+          if (y <= state.height + 24) spawnRipple(x, y, 0.92)
+        }
+
+        const onLeave = () => { state.pointer.inside = false }
+        const onScrollOrVis = () => {
+          if (isBandVisible()) startOrRender()
+          else stopLoop()
+        }
+        const onTheme = () => {
+          state.palette = readHalftonePalette(root)
+          if (reduceQuery.matches) drawHalftoneDots(ctx, state.width, state.height, state.palette, state, 0, true)
+        }
+
+        const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null
+        if (ro) ro.observe(paper)
+        const mo = typeof MutationObserver === 'function'
+          ? new MutationObserver(onTheme)
+          : null
+        if (mo) {
+          const opts = { attributes: true, attributeFilter: ['class', 'data-ds-dark-theme', 'data-theme', 'style'] }
+          mo.observe(document.documentElement, opts)
+          if (document.body) mo.observe(document.body, opts)
+          mo.observe(root, opts)
+        }
+
+        root.addEventListener('pointermove', onMove, { passive: true })
+        root.addEventListener('pointerdown', onDown, { passive: true })
+        root.addEventListener('pointerleave', onLeave)
+        root.addEventListener('scroll', onScrollOrVis, { passive: true })
+        document.addEventListener('visibilitychange', onScrollOrVis)
+        reduceQuery.addEventListener('change', startOrRender)
+        schemeQuery.addEventListener('change', onTheme)
+
+        resize()
+        startOrRender()
+
+        return () => {
+          stopLoop()
+          paper.removeAttribute('data-canvas')
+          if (ro) ro.disconnect()
+          if (mo) mo.disconnect()
+          root.removeEventListener('pointermove', onMove)
+          root.removeEventListener('pointerdown', onDown)
+          root.removeEventListener('pointerleave', onLeave)
+          root.removeEventListener('scroll', onScrollOrVis)
+          document.removeEventListener('visibilitychange', onScrollOrVis)
+          reduceQuery.removeEventListener('change', startOrRender)
+          schemeQuery.removeEventListener('change', onTheme)
+        }
+      }, [rootRef, paperRef, canvasRef])
+    }
+
     function Page(props) {
       const t = props && typeof props.t === 'function' ? props.t : translate
       const [tab, setTab] = useState('board')
@@ -2452,56 +2814,15 @@ window.__ModuleLoader__.load({
          会落在榜单中部，看不到刊头和前三名（原来内层滚动时这也是同样的问题，
          只是窗口小、不容易发现） */
       const rootRef = useRef(null)
+      const paperRef = useRef(null)
+      const canvasRef = useRef(null)
       // 三个榜单共用同一个搜索框；切页签时清空，否则在写作榜里搜的词会带着去过滤编程榜
       useEffect(() => {
         if (rootRef.current) rootRef.current.scrollTop = 0
         setQuery('')
       }, [tab])
 
-      /* 指针处的洞：pointermove 触发极密，直接写 style 会让 149 行的表掉帧，
-         所以只记坐标、用 rAF 合并成每帧最多一次写入；减动效时干脆不留洞 */
-      const pointerRef = useRef({ x: -1, y: -1, frame: 0 })
-      useEffect(() => {
-        const root = rootRef.current
-        if (!root) return undefined
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
-        const write = () => {
-          pointerRef.current.frame = 0
-          const p = pointerRef.current
-          if (p.x < 0) {
-            root.style.setProperty('--mdlb-mx', '-9999px')
-            root.style.setProperty('--mdlb-my', '-9999px')
-            return
-          }
-          root.style.setProperty('--mdlb-mx', p.x + 'px')
-          root.style.setProperty('--mdlb-my', p.y + 'px')
-        }
-        const schedule = () => {
-          if (!pointerRef.current.frame) pointerRef.current.frame = window.requestAnimationFrame(write)
-        }
-        const onMove = event => {
-          if (reduce.matches) return
-          /* 洞画在 absolute 的纸上，纸跟着内容滚走，所以坐标要连内容偏移一起算：
-             用视口坐标的话，滚下去指针移到表格区，洞还会画在纸上（此时已在屏幕外），
-             看起来像洞乱飘 */
-          const box = root.getBoundingClientRect()
-          const p = pointerRef.current
-          p.x = event.clientX - box.left
-          p.y = event.clientY - box.top + root.scrollTop
-          schedule()
-        }
-        const onLeave = () => {
-          pointerRef.current.x = -1
-          schedule()
-        }
-        root.addEventListener('pointermove', onMove, { passive: true })
-        root.addEventListener('pointerleave', onLeave)
-        return () => {
-          root.removeEventListener('pointermove', onMove)
-          root.removeEventListener('pointerleave', onLeave)
-          if (pointerRef.current.frame) window.cancelAnimationFrame(pointerRef.current.frame)
-        }
-      }, [])
+      useHalftoneWave(rootRef, paperRef, canvasRef)
       const [modelSort, setModelSort] = useState('best')
       const [currency, setCurrency] = useState('USD')
       const [provider, setProvider] = useState('*')
@@ -2717,7 +3038,8 @@ window.__ModuleLoader__.load({
 
       return h('div', { className: 'mdlb-root', ref: rootRef },
         h('style', { key: 'mdlb-style' }, CSS),
-        h('div', { key: 'mdlb-paper', className: 'mdlb-paper', 'aria-hidden': 'true' }),
+        h('div', { key: 'mdlb-paper', ref: paperRef, className: 'mdlb-paper', 'aria-hidden': 'true' },
+          h('canvas', { ref: canvasRef, className: 'mdlb-paper-canvas' })),
         h('div', { key: 'mdlb-sheen', className: 'mdlb-sheen', 'aria-hidden': 'true' }),
         h('div', { className: 'mdlb-head' },
           h('div', { className: 'mdlb-mast' },
@@ -2753,6 +3075,8 @@ window.__ModuleLoader__.load({
             h('button', {
               className: 'mdlb-btn',
               disabled: busy,
+              'data-busy': String(busy),
+              'aria-busy': String(busy),
               onClick: () => { void load(true) },
               title: t('refresh'),
             },

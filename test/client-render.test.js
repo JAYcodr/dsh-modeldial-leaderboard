@@ -39,6 +39,7 @@ const feeds = (() => {
 
 let feedIndex = 0
 let injectedTab = 'board'
+let injectedOpen = null
 
 const react = {
   Fragment: 'Fragment',
@@ -51,6 +52,7 @@ const react = {
   useState(initial) {
     // Page's tab state is the only useState seeded with a tab id
     if (initial === 'board') return [injectedTab, () => {}]
+    if (initial === null && injectedOpen) return [injectedOpen, () => {}]
     // useFeed's slot is the only object carrying this exact shape
     if (initial && typeof initial === 'object' && 'busy' in initial && 'payload' in initial) {
       const slot = feeds[feedIndex] || feeds[0]
@@ -122,12 +124,27 @@ function loadClient() {
   return Page
 }
 
-function renderTab(tab) {
+function renderTabTree(tab, openKey = null) {
   feedIndex = 0
   injectedTab = tab
+  injectedOpen = openKey
   const Page = loadClient()
-  const tree = render({ type: Page, props: { t: key => key } })
-  return textOf(tree).join(' ')
+  return render({ type: Page, props: { t: key => key } })
+}
+
+function renderTab(tab, openKey = null) {
+  return textOf(renderTabTree(tab, openKey)).join(' ')
+}
+
+function findAll(node, predicate, out = []) {
+  if (!node || typeof node !== 'object') return out
+  if (Array.isArray(node)) {
+    node.forEach(child => findAll(child, predicate, out))
+    return out
+  }
+  if (predicate(node)) out.push(node)
+  findAll(node.children, predicate, out)
+  return out
 }
 
 test('every tab of the page renders without throwing', () => {
@@ -165,4 +182,31 @@ test('quota-driven tabs keep working', () => {
   assert.match(renderTab('value'), /perUnit|colPerDollar|价值|valueSub|tabValue/)
   assert.match(renderTab('model'), /tabModel/)
   assert.match(renderTab('budget'), /tabBudget/)
+})
+
+test('halftone canvas, refresh busy state, and readable CSS rules are wired', () => {
+  const tree = renderTabTree('board')
+  const canvases = findAll(tree, n => n.type === 'canvas' && n.props?.className === 'mdlb-paper-canvas')
+  assert.equal(canvases.length, 1, 'halftone paper should contain a canvas element')
+
+  const refreshButtons = findAll(tree, n => n.type === 'button' && n.props?.className === 'mdlb-btn')
+  assert.equal(refreshButtons.length, 1)
+  assert.equal(refreshButtons[0].props['data-busy'], 'false')
+  assert.equal(refreshButtons[0].props['aria-busy'], 'false')
+
+  const styles = findAll(tree, n => n.type === 'style')
+  const cssText = textOf(styles).join('')
+  assert.match(cssText, /font-size:\s*14px/)
+  assert.match(cssText, /@keyframes mdlb-spin/)
+  assert.match(cssText, /@starting-style/)
+  assert.match(cssText, /\.mdlb-detail-clip/)
+  assert.match(cssText, /prefers-reduced-motion:\s*reduce/)
+})
+
+test('expanded writing row wraps axes inside the smooth detail clip drawer', () => {
+  const tree = renderTabTree('writing', 'muse-wonder')
+  const clips = findAll(tree, n => n.props?.className === 'mdlb-detail-clip')
+  assert.equal(clips.length, 1)
+  const axesBars = findAll(clips[0], n => n.type === 'i' && n.props?.style && '--axis-i' in n.props.style)
+  assert.equal(axesBars.length, 8)
 })
