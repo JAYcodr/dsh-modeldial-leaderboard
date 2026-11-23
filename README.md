@@ -2,8 +2,14 @@
 
 DeepSeek Harness 的侧栏面板插件：把 [modeldial.com](https://modeldial.com) 的三张榜（编程、文本能力、Harness）和订阅额度实测搬进 app 里，抓一次数据，七个页签横着看。
 
-![榜单](docs/preview-board.png)
-![订阅额度](docs/preview-quota.png)
+<p align="center">
+  <img src="docs/preview-board.png" width="49%" alt="编程榜单">
+  <img src="docs/preview-writing.png" width="49%" alt="文本能力榜">
+  <img src="docs/preview-quota.png" width="49%" alt="订阅额度">
+  <img src="docs/preview-harness.png" width="49%" alt="Harness 榜">
+</p>
+
+文本能力榜与 Harness 榜的行尾可展开 8 个维度；截图是 2026-11-23 的实抓数据（55 个模型 / 38 个模型 / 23 个 harness / 21 家厂商 68 个套餐）。
 
 ## 七个页签
 
@@ -76,7 +82,7 @@ npm test        # 解析器 + 四个路由 + 落盘/重启 + 客户端渲染冒�
 
 `test/fixtures/` 是从上游裁剪下来的样本（CI 不联网）。上游改版导致解析失败时，跑 `node scripts/refresh-fixtures.mjs` 重新生成再对照 diff。
 
-想直接看版式、不启动 DSH：`node scripts/preview.mjs --tab=writing`（可选 `--dark`、`--width=1600`、`--height=900`、`--open=<行 key>`、`--all`），会把客户端用 fixtures 数据渲染成静态 HTML，输出路径在命令里。
+想直接看版式、不启动 DSH：`node scripts/preview.mjs --tab=writing`（可选 `--dark`、`--width=1600`、`--height=900`、`--open=<行 key>`、`--all`、`--static`、`--empty`、`--live=http://127.0.0.1:<port>`），会把客户端渲染成静态 HTML，输出路径在命令里。`--live` 直接用运行中宿主抓到的真实数据，`--static` 冻结入场动画（截图用）。
 
 ## 安装
 

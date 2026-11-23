@@ -39,13 +39,32 @@ const dark = args.get('dark') === 'true'
 const outDir = args.get('out') || '/tmp/modeldial-preview'
 const openKey = args.get('open') || ''
 const empty = args.get('empty') === 'true'
+// --live=http://127.0.0.1:61671 renders the running host's real payloads
+// instead of the fixtures (the routes are same-origin and need no auth).
+const live = args.get('live') || ''
+// --static freezes entrance animations so a headless screenshot never catches
+// a half-faded row (docs images, and pixel diffs)
+const staticMode = args.get('static') === 'true'
 const tabList = args.get('all') === 'true'
   ? ['board', 'writing', 'harness', 'quota', 'value', 'model', 'budget']
   : [args.get('tab') || 'board']
 
 const fixture = name => fs.readFileSync(join(ROOT, 'test', 'fixtures', name), 'utf8')
 
-const feeds = empty
+async function liveFeeds(base) {
+  const paths = ['/__modeldial/leaderboard', '/__modeldial/quota', '/__modeldial/writing', '/__modeldial/harness']
+  const slots = []
+  for (const path of paths) {
+    const response = await fetch(base.replace(/\/$/, '') + path)
+    if (!response.ok) throw new Error(`${path} -> HTTP ${response.status}`)
+    const payload = await response.json()
+    if (!payload.ok) throw new Error(`${path} -> ${payload.error}`)
+    slots.push({ loading: false, busy: false, payload, error: null })
+  }
+  return slots
+}
+
+let feeds = empty
   ? [
     { loading: false, busy: false, payload: { ok: true, data: [] }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: [] }, error: null },
@@ -58,6 +77,8 @@ const feeds = empty
     { loading: false, busy: false, payload: { ok: true, data: __test.parseWriting(JSON.parse(fixture('writing.json'))) }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: __test.parseHarness(fixture('harness.html')) }, error: null },
   ]
+
+if (live) feeds = await liveFeeds(live)
 
 let feedIndex = 0
 let injectedTab = 'board'
@@ -178,6 +199,7 @@ html,body{margin:0;background:var(--dsw-alias-bg-base)}
 body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",Arial,sans-serif}
 #root{width:${width}px;height:${height}px}
 ${dark ? '.mdlb-dark{height:100%}' : ''}
+${staticMode ? '*{animation:none!important;transition:none!important}' : ''}
 </style></head><body><div id="root">${wrapper}</div></body></html>`
 }
 
