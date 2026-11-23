@@ -38,18 +38,26 @@ const height = Number(args.get('height') || 900)
 const dark = args.get('dark') === 'true'
 const outDir = args.get('out') || '/tmp/modeldial-preview'
 const openKey = args.get('open') || ''
+const empty = args.get('empty') === 'true'
 const tabList = args.get('all') === 'true'
   ? ['board', 'writing', 'harness', 'quota', 'value', 'model', 'budget']
   : [args.get('tab') || 'board']
 
 const fixture = name => fs.readFileSync(join(ROOT, 'test', 'fixtures', name), 'utf8')
 
-const feeds = [
-  { loading: false, busy: false, payload: { ok: true, data: __test.parseLeaderboard(fixture('leaderboard.html')) }, error: null },
-  { loading: false, busy: false, payload: { ok: true, data: __test.parseQuota(fixture('quota.html')) }, error: null },
-  { loading: false, busy: false, payload: { ok: true, data: __test.parseWriting(JSON.parse(fixture('writing.json'))) }, error: null },
-  { loading: false, busy: false, payload: { ok: true, data: __test.parseHarness(fixture('harness.html')) }, error: null },
-]
+const feeds = empty
+  ? [
+    { loading: false, busy: false, payload: { ok: true, data: [] }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: [] }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: { rows: [] } }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: { rows: [] } }, error: null },
+  ]
+  : [
+    { loading: false, busy: false, payload: { ok: true, data: __test.parseLeaderboard(fixture('leaderboard.html')) }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: __test.parseQuota(fixture('quota.html')) }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: __test.parseWriting(JSON.parse(fixture('writing.json'))) }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: __test.parseHarness(fixture('harness.html')) }, error: null },
+  ]
 
 let feedIndex = 0
 let injectedTab = 'board'
@@ -175,7 +183,7 @@ ${dark ? '.mdlb-dark{height:100%}' : ''}
 
 fs.mkdirSync(outDir, { recursive: true })
 for (const tab of tabList) {
-  const file = join(outDir, `${tab}${dark ? '-dark' : ''}${openKey ? '-open' : ''}-${width}x${height}.html`)
+  const file = join(outDir, `${tab}${dark ? '-dark' : ''}${openKey ? '-open' : ''}${empty ? '-empty' : ''}-${width}x${height}.html`)
   fs.writeFileSync(file, pageFor(tab))
   console.log(file)
 }

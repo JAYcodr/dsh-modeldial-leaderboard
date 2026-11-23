@@ -285,6 +285,9 @@ window.__ModuleLoader__.load({
          唯一的固定色是 IKB 蓝（亮 #002fa7 / 暗 #96b0ff），靠 data-theme 切换。
          --------------------------------------------------------------- */
       .mdlb-root {
+        /* 明细栅格按「面板宽度」断列，不按窗口宽度：DSH 主列宽窄跟窗口无关。
+           这条只让容器可查询，本身不改变任何布局 */
+        container-type: inline-size;
         --mdlb-ink: var(--dsw-alias-label-primary);
         --mdlb-ink2: var(--dsw-alias-label-secondary);
         --mdlb-ink3: color-mix(in srgb, var(--dsw-alias-label-tertiary) 74%, var(--dsw-alias-label-primary));
@@ -885,6 +888,8 @@ window.__ModuleLoader__.load({
       }
       .mdlb-main-score { font-weight: 650; }
       .mdlb-main-score .mdlb-bar { width: 50px; height: 4px; }
+      /* 新两榜的次级列：主分保留 50×4 的权重量级，理解/输出/稳定率等降到 30×2 */
+      .mdlb-bar--sub { width: 30px; height: 2px; }
       .mdlb-muted { color: var(--mdlb-ink3); }
 
       /* 空状态：顶左排，不做居中的大空白 */
@@ -909,6 +914,9 @@ window.__ModuleLoader__.load({
         max-width: 42em;
       }
       .mdlb-empty-cell { padding: 0 !important; border-bottom: 0 !important; }
+      /* 新两榜的空态：发丝线拉满整行，标题回到 19px、提示回到 12.5px。
+         旧的空态结构不动（仍是原来的短横线），只在这里收口 */
+      .mdlb-empty--board { max-width: none; padding-top: 34px; }
 
       /* 厂商切换：底部下划线的高亮标签 */
       .mdlb-providers {
@@ -1107,6 +1115,36 @@ window.__ModuleLoader__.load({
         text-decoration: underline; text-underline-offset: 2px;
         letter-spacing: .02em;
       }
+      /* 新两榜的行内展开：去掉下划线，降到次级灰，箭头只在悬停/展开时上强调色。
+         文案仍是「展开维度」，但不再跟数据抢蓝 */
+      .mdlb-axisbtn {
+        appearance: none; border: 0; padding: 1px 0; margin: 0; background: none;
+        display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;
+        font: inherit; font-size: 10.5px; letter-spacing: .02em;
+        color: var(--mdlb-ink3); cursor: pointer;
+        transition: color .12s ease;
+      }
+      .mdlb-axisbtn:hover,
+      .mdlb-table tbody tr:hover .mdlb-axisbtn { color: var(--mdlb-accent); }
+      .mdlb-axisbtn[aria-expanded="true"] { color: var(--mdlb-accent); }
+      .mdlb-axisbtn svg { flex: none; transition: transform .16s ease; }
+      .mdlb-axisbtn[aria-expanded="true"] svg { transform: rotate(180deg); }
+      /* 操作列只包住内容：宽表下不吸收剩余宽度，避免右端出现一块空白 */
+      .mdlb-table th.mdlb-axes-cell, .mdlb-table td.mdlb-axes-cell { width: 1%; white-space: nowrap; }
+      /* 展开行与明细连成一块：去掉中间发丝线、行底铺 wash、排名挂强调色 */
+      .mdlb-table tbody tr[data-open="true"] td { border-bottom-color: transparent; background: var(--mdlb-wash); }
+      .mdlb-table tbody tr[data-open="true"] td:first-child { background: var(--mdlb-wash); }
+      .mdlb-table tbody tr[data-open="true"] .mdlb-rank span { color: var(--mdlb-accent); }
+      /* 键盘焦点：宿主重置过默认环，补一条与版面同语言的 1px 线 */
+      .mdlb-root button:focus-visible,
+      .mdlb-root a:focus-visible {
+        outline: 1px solid var(--mdlb-accent);
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .mdlb-axisbtn,
+        .mdlb-axisbtn svg { transition: none; }
+      }
       .mdlb-detail td {
         background: var(--mdlb-wash);
         border-bottom: 1px solid var(--mdlb-rule);
@@ -1124,13 +1162,24 @@ window.__ModuleLoader__.load({
         color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 78%, var(--mdlb-ink));
       }
       .mdlb-detail-item[data-unknown="true"] > span { color: var(--mdlb-ink3); }
-      /* 维度明细：标签 / 条 / 数字三列，稠密但可扫读；不用卡片，和表格同一套发丝线 */
+      /* 维度明细：标签 / 条 / 数字三列。固定四列，8 项落成 4+4，
+         不会在 1280 下折成 5+3；面板窄于 780 时降两列（容器查询）。
+         两组之间插一条通栏发丝线，不加卡片也不加组标题 */
       .mdlb-axis-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 5px 22px;
-        padding: 8px 11px 10px;
+        padding: 9px 11px 11px;
       }
+      @container (max-width: 780px) {
+        .mdlb-axis-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      /* 宽面板下给模型列一个上限比例：6 列的表在 1600 会把它撑到 620px，
+         数字被推得太散；30% 让三列分数自己分掉余量 */
+      @container (min-width: 940px) {
+        .mdlb-table--axes th:nth-child(2) { width: 30%; }
+      }
+      .mdlb-axis-rule { grid-column: 1 / -1; height: 1px; background: var(--mdlb-rule); margin: 4px 0 1px; }
       .mdlb-axis {
         display: grid;
         grid-template-columns: 72px minmax(0, 1fr) 32px;
@@ -1139,7 +1188,7 @@ window.__ModuleLoader__.load({
         font-variant-numeric: tabular-nums;
       }
       .mdlb-axis > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .mdlb-axis .mdlb-bar { width: 100%; height: 3px; }
+      .mdlb-axis .mdlb-bar { width: 100%; height: 2px; }
       .mdlb-axis > b { text-align: right; font-weight: 600; font-size: 11.5px; color: var(--mdlb-ink); }
 
       /* 骨架 */
@@ -1785,7 +1834,7 @@ window.__ModuleLoader__.load({
      * 文本榜 / Harness 榜共用的排名表：前三名大字报、第 4 名起进表格、表头排序、
      * 搜索，加上每行可展开的 8 个维度。列定义由调用方给，渲染规则与编程榜一致。
      */
-    function BoardTable({ rows, columns, t, query, onQuery, href, podium, axes, digits, countLabel, topRight, nameLabel, searchPlaceholder, noMatchLabel }) {
+    function BoardTable({ rows, columns, t, query, onQuery, href, podium, axes, digits, countLabel, topRight, nameLabel, searchPlaceholder, noMatchLabel, axisGroup = 0 }) {
       const { sort, onSort, sorted } = useRankSort(rows, boardPick)
       const [open, setOpen] = useState(null)
       // 默认视图：前三名上大字报，表格从第 4 名开始；一旦排序或搜索，大字报让位给全量表格
@@ -1819,23 +1868,23 @@ window.__ModuleLoader__.load({
             }),
           ),
           h('div', { className: 'mdlb-body' },
-            h('table', { className: 'mdlb-table' },
+            h('table', { className: 'mdlb-table mdlb-table--axes' },
               h('thead', null, h('tr', null,
                 h(SortHead, { key: 'rank', colKey: 'rank', label: t('colRank'), sort, onSort }),
                 h(SortHead, { key: 'model', colKey: 'model', label: nameLabel || t('colModel'), left: true, sort, onSort }),
                 ...columns.map(column => h(SortHead, { key: column.key, colKey: column.key, label: column.label, sort, onSort })),
-                h('th', { key: 'axes', scope: 'col' }, t('colAxes')),
+                h('th', { key: 'axes', scope: 'col', className: 'mdlb-axes-cell' }, t('colAxes')),
               )),
               h('tbody', null, tableRows.length === 0
                 ? h('tr', { key: '__empty__' }, h('td', { className: 'mdlb-empty-cell', colSpan: span },
-                  h('div', { className: 'mdlb-empty' },
+                  h('div', { className: 'mdlb-empty mdlb-empty--board' },
                     h('span', { className: 'mdlb-empty-title' }, noMatchLabel || t('noMatch')),
                     h('span', null, t('noMatchHint')))))
                 : tableRows.map((row, i) => {
                   const expanded = open === row.key
                   const detail = axes(row)
                   return [
-                    h('tr', { key: row.key, style: { '--i': i } },
+                    h('tr', { key: row.key, style: { '--i': i }, 'data-open': String(expanded) },
                       h('td', { className: 'mdlb-rank', 'data-top': String(Number(row.rank) <= 3) },
                         h('span', null, row.rank)),
                       h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-name' },
@@ -1852,25 +1901,36 @@ window.__ModuleLoader__.load({
                       ...columns.map(column => h('td', { key: column.key },
                         h('span', { className: column.main ? 'mdlb-score mdlb-main-score' : 'mdlb-score' },
                           h('span', null, formatScore(row[column.key], column.digits ?? 1) + (column.suffix || '')),
-                          h('i', { className: 'mdlb-bar', 'data-tone': tone(row[column.key]) },
+                          h('i', { className: column.main ? 'mdlb-bar' : 'mdlb-bar mdlb-bar--sub', 'data-tone': tone(row[column.key]) },
                             h('i', { style: { width: percent(row[column.key]) } })),
                         ))),
-                      h('td', null, h('button', {
-                        className: 'mdlb-rowbtn',
+                      h('td', { className: 'mdlb-axes-cell' }, h('button', {
+                        className: 'mdlb-axisbtn',
                         'aria-expanded': String(expanded),
+                        title: expanded ? t('collapseAxis') : t('expandAxis'),
                         onClick: () => setOpen(expanded ? null : row.key),
-                      }, expanded ? t('collapseAxis') : t('expandAxis'))),
+                      },
+                      h('span', null, expanded ? t('collapseAxis') : t('expandAxis')),
+                      h('svg', {
+                        width: 9, height: 9, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+                        strokeWidth: 2.4, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
+                      }, h('path', { d: 'M6 9l6 6 6-6' })))),
                     ),
                     expanded
                       ? h('tr', { key: row.key + ':axes', className: 'mdlb-detail' },
                         h('td', { colSpan: span, className: 'mdlb-left' },
                           h('div', { className: 'mdlb-axis-grid' },
-                            detail.map(item => h('div', { key: item.label, className: 'mdlb-axis' },
-                              h('span', null, item.label),
-                              h('i', { className: 'mdlb-bar', 'data-tone': tone(item.score) },
-                                h('i', { style: { width: percent(item.score) } })),
-                              h('b', null, item.value),
-                            )))))
+                            detail.map((item, index) => [
+                              axisGroup > 0 && index === axisGroup
+                                ? h('div', { key: item.label + ':rule', className: 'mdlb-axis-rule', 'aria-hidden': true })
+                                : null,
+                              h('div', { key: item.label, className: 'mdlb-axis' },
+                                h('span', null, item.label),
+                                h('i', { className: 'mdlb-bar', 'data-tone': tone(item.score) },
+                                  h('i', { style: { width: percent(item.score) } })),
+                                h('b', null, item.value),
+                              ),
+                            ]))))
                       : null,
                   ]
                 })),
@@ -2485,7 +2545,7 @@ window.__ModuleLoader__.load({
         if (tab === 'writing') {
           if (writingRows.length === 0) return []
           // 上游只给整批的 published_at；面板标出批次日期，避免把 11-19 的数据当今天的
-          const batch = writingData && writingData.publishedAt ? writingData.publishedAt.slice(5, 10) : '—'
+          const batch = writingData && writingData.publishedAt ? writingData.publishedAt.slice(5, 10).replace('-', '/') : '—'
           return [['models', 'kpiBoardModels', writingRows.length], ['batch', 'kpiBatch', batch]]
         }
         if (tab === 'harness') {
@@ -2535,8 +2595,16 @@ window.__ModuleLoader__.load({
             : tab === 'harness'
               ? harnessRows
               : sections
+        /* 标题要包一层 .mdlb-empty-title：裸文本是 13px，反而是提示的 span 吃到
+           `span:first-child` 的 19px，层级是反的。新两榜另用 .mdlb-empty--board */
         const emptyCard = () => h('div', { className: 'mdlb-main' }, h('div', { className: 'mdlb-card' },
-          h('div', { className: 'mdlb-empty' }, t('empty'), h('span', null, t('emptyHint')))))
+          h('div', { className: 'mdlb-empty' },
+            h('span', { className: 'mdlb-empty-title' }, t('empty')),
+            h('span', null, t('emptyHint')))))
+        const emptyBoardCard = () => h('div', { className: 'mdlb-main' }, h('div', { className: 'mdlb-card' },
+          h('div', { className: 'mdlb-empty mdlb-empty--board' },
+            h('span', { className: 'mdlb-empty-title' }, t('empty')),
+            h('span', null, t('emptyHint')))))
         /* 抓取失败且一个数据都没有：不要再摆一块「还没有数据」跟 banner 抢注意力，
            banner 已经写了失败原因和「重试」。有旧数据（stale）时照常显示表格 */
         if (active.error && activeRows.length === 0) return null
@@ -2559,7 +2627,7 @@ window.__ModuleLoader__.load({
           return h(LeaderboardTable, { rows: filtered, total: boardRows.length, t, query, onQuery: setQuery })
         }
         if (tab === 'writing') {
-          if (writingRows.length === 0) return emptyCard()
+          if (writingRows.length === 0) return emptyBoardCard()
           const needle = query.trim().toLowerCase()
           const filtered = needle
             ? writingRows.filter(row => (row.name + ' ' + row.effort).toLowerCase().includes(needle))
@@ -2582,12 +2650,13 @@ window.__ModuleLoader__.load({
               value: formatScore(axis.score, 0),
               score: axis.score,
             })),
+            axisGroup: 4,
             topRight: t('writingTopRight'),
             countLabel: 'boardCount',
           })
         }
         if (tab === 'harness') {
-          if (harnessRows.length === 0) return emptyCard()
+          if (harnessRows.length === 0) return emptyBoardCard()
           const needle = query.trim().toLowerCase()
           const filtered = needle
             ? harnessRows.filter(row => row.name.toLowerCase().includes(needle))
