@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Modeldial 看板",
-    "description": "在侧栏打开 Modeldial 的编程、文本能力与 Harness 三张榜，以及各家套餐的订阅额度实测：55 个模型的编程分项、38 个模型的文本维度、23 个 harness 的能力域、21 家厂商 68 个套餐的额度矩阵，可随时手动刷新。",
+    "description": "在侧栏打开 Modeldial 的编程、文本能力、Harness 三张榜、真实用量对照与各家套餐的订阅额度实测：覆盖各榜评分维度、OpenRouter/Vercel 真实用量与留存、21 家厂商 68 个套餐的月均可用 Token 矩阵，可随时手动刷新。",
     "detail": "docs/DETAIL.md"
   }
 }

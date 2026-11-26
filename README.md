@@ -1,6 +1,6 @@
 # Modeldial 看板
 
-DeepSeek Harness 的侧栏面板插件：把 [modeldial.com](https://modeldial.com) 的三张榜（编程、文本能力、Harness）和订阅额度实测搬进 app 里，抓一次数据，七个页签横着看。
+DeepSeek Harness 的侧栏面板插件：把 [modeldial.com](https://modeldial.com) 的三张榜（编程、文本能力、Harness）、真实用量对照与订阅额度实测搬进 app 里，抓一次数据，八个页签横着看。
 
 <p align="center">
   <img src="docs/preview-board.png" width="49%" alt="编程榜单">
@@ -11,11 +11,12 @@ DeepSeek Harness 的侧栏面板插件：把 [modeldial.com](https://modeldial.c
 
 文本能力榜与 Harness 榜的行尾可展开 8 个维度；截图是 2026-11-23 的实抓数据（55 个模型 / 38 个模型 / 23 个 harness / 21 家厂商 68 个套餐）。
 
-## 七个页签
+## 八个页签
 
 - **编程榜单** — 55 个模型的综合分、后端工程、视觉审美、知识推理、前端工程、可维护性、评测用时、费用、发布日期。前三名大号字报，第 4 名往后是紧凑表格；11 列全部可排序，支持搜索。
 - **文本能力榜** — 38 个模型的文本总分、理解、输出，行可展开看 8 个评分维度（语义辨析、证据整合、意图推断、规则应用、文本表达、文体适配、叙事推进、成稿完整度）。写作/翻译选型看这张，不要拿编程榜代替。
 - **Harness 榜** — 23 个 harness 本体的综合分、稳定完成率、时间效率、成本效率，行可展开看软件工程、系统运维、数据分析、科研与仿真、安全攻防、推理规划、办公交付、多媒体处理 8 个能力域。选 agent 工具看这张。
+- **真实用量** — 把 ModelDial 五轴实测分与 OpenRouter 近 14 日 Token 占比、Vercel 近 30 日 API 支出、28 日留存变化放在一起看，并与订阅额度目录交叉对照：每行直接标出该模型「可订阅套餐数 / 起步月费 / 最高月均可用亿 Token」，展开明细可查看各套餐给多少 Token 或一键跳到「按模型」页签。另有厂商「花钱 vs 用量」双柱对比。
 - **订阅额度** — 21 家厂商、68 个套餐的额度矩阵，默认「全部」按厂商分段，也可只看一家。上游把额度混着按周和按月给，面板统一折成月显示，原值留在 tooltip 里。USD / CNY 双向换算。
 - **性价比** — 149 个「套餐 × 模型」组合按每 $1（或每 ¥1）换到的 Token 排序，可按厂商过滤。
 - **按模型** — 选一个模型，看哪些厂商的哪些套餐收录它、各自给多少额度。28 个模型按厂商分组（额度侧和榜单侧的模型名有别名，已合并），默认按性价比排。
@@ -34,6 +35,7 @@ DeepSeek Harness 的侧栏面板插件：把 [modeldial.com](https://modeldial.c
 | 编程榜单 | <https://modeldial.com/leaderboard/coding?axis=overall> | SSR HTML | 4 分钟 |
 | 文本能力榜 | <https://reference.modeldial.com/writing-snapshots/current.json> | 官方 JSON 快照 | 15 分钟 |
 | Harness 榜 | <https://modeldial.com/leaderboard/harness> | SSR HTML | 10 分钟 |
+| 真实用量 | <https://modeldial.com/trends> | SSR HTML | 15 分钟 |
 | 订阅额度 | <https://modeldial.com/subscriptions?period=week&view=catalog&currency=CNY> | SSR HTML | 10 分钟 |
 
 文本能力榜的页面是客户端渲染，直接抓 HTML 只有空壳；它自己读的就是上面那份官方快照 feed，所以面板抓同一份 JSON，不跑浏览器、不调第三方 API。额度页有两种结构：8 家用 `<table>` 矩阵，另外 13 家用「一行一档位、档位里嵌模型」的卡片，Host 端把后者还原成同样的矩阵。
@@ -67,6 +69,7 @@ GET /__modeldial/leaderboard   # 编程榜单，?force=1 跳过缓存
 GET /__modeldial/quota         # 额度矩阵，?force=1 跳过缓存
 GET /__modeldial/writing       # 文本能力榜，?force=1 跳过缓存
 GET /__modeldial/harness       # Harness 榜，?force=1 跳过缓存
+GET /__modeldial/trends        # 真实用量与留存对照，?force=1 跳过缓存
 ```
 
 返回 `{ ok, cached, from, fetchedAt, error, data }`；失败时 `ok: false` 且仍带上次的 `data`。`from` 标明这份数据来自 `network` / `memory` / `disk`，只用于排查。

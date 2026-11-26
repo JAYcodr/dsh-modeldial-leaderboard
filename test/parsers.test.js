@@ -113,7 +113,42 @@ test('parsers return nothing instead of inventing rows on structure drift', () =
   assert.deepEqual(__test.parseLeaderboard('<html></html>'), [])
   assert.deepEqual(__test.parseQuota('<html></html>'), [])
   assert.throws(() => __test.parseHarness('<html></html>'), /没有解析到/)
+  assert.throws(() => __test.parseTrends('<html></html>'), /没有解析到/)
   assert.equal(__test.rowCount('writing', null), 0)
   assert.equal(__test.rowCount('writing', { rows: [1] }), 1)
+  assert.equal(__test.rowCount('trends', { rows: [1, 2, 3] }), 3)
   assert.equal(__test.rowCount('leaderboard', [1, 2]), 2)
+})
+
+test('parseTrends extracts anchors, vendor spend vs usage, and adoption rows', () => {
+  const trends = __test.parseTrends(fixture('trends.html'))
+  assert.equal(trends.updatedAt, '2026.11.23')
+  assert.equal(trends.catalogCount, 56)
+  assert.equal(trends.windowDays, 90)
+  assert.equal(trends.highlights.length, 3)
+  assert.equal(trends.vendors.length, 7)
+  assert.equal(trends.vendors[0].name, 'Anthropic')
+  assert.equal(trends.vendors[0].spendShare, 40.9)
+  assert.equal(trends.vendors[0].usageShare, 12.2)
+  assert.equal(trends.vendors[6].usageTop, true)
+  assert.equal(trends.rows.length, 26)
+
+  const fable = trends.rows[0]
+  assert.equal(fable.name, 'Claude Fable 5.2')
+  assert.equal(fable.boardRank, 1)
+  assert.equal(fable.score, 72.91)
+  assert.equal(fable.tokenShare, 0.34)
+  assert.equal(fable.spendShare, 4.68)
+  assert.equal(fable.isNew28, true)
+  assert.deepEqual(fable.stages, ['首3日 0.59%', '最新 0.29%'])
+
+  const opus = trends.rows[1]
+  assert.equal(opus.name, 'Claude Opus 5.5')
+  assert.equal(opus.isFull28, true)
+  assert.equal(opus.retentionTone, 'pos')
+  assert.equal(opus.retentionChangePct, 289)
+  assert.deepEqual(opus.stages, ['首3日 1.11%', '第4周 4.31%', '近7日 2.12%'])
+
+  assert.ok(trends.rows.some(row => row.isFree === true))
+  assert.ok(trends.rows.some(row => row.effort === '' && row.name === 'Gemini 4 Argon'))
 })

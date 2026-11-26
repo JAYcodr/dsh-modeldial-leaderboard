@@ -1,10 +1,11 @@
 # Modeldial 看板
 
-侧栏里的「排行榜」入口，打开后是主列里的一整页看板，七个页签：
+侧栏里的「排行榜」入口，打开后是主列里的一整页看板，八个页签：
 
 - **编程榜单**：Modeldial 的编程排行榜（综合轴），55 个模型的综合分、后端工程、视觉审美、知识推理、前端工程、可维护性、评测用时、费用和发布日期。点表头排序，右上角搜索框按模型名过滤，模型名可点开对应页面。
 - **文本能力榜**：38 个模型的文本总分、理解、输出与 8 个评分维度（语义辨析、证据整合、意图推断、规则应用、文本表达、文体适配、叙事推进、成稿完整度）。行尾「展开维度」按行展开；写作、翻译选型看这张。
 - **Harness 榜**：23 个 harness 本体的综合分、稳定完成率、时间效率、成本效率和 8 个能力域；同样可展开维度。三张榜量纲不同，不要跨榜比分数。
+- **真实用量**：将 Modeldial 五轴综合分与 OpenRouter 近 14 日 Token 占比、Vercel 近 30 日支出及 28 日留存变化对照，并提供厂商花钱 vs 用量双柱对比；同时关联订阅目录，每行直接列出该模型在订阅侧的最高月均 Token 额度与起步价，展开可看各套餐具体额度或跳转「按模型」。
 - **订阅额度**：21 家厂商、68 个套餐的额度矩阵，可看全部或只挑一家，按套餐和模型列出可用 Token 量与 API 等值。上游有的按周给药、有的按月给，面板统一按 52/12 折成月显示。右上角可切 USD / CNY。
 - **性价比**：把上面所有「套餐 × 模型」按每 $1 换到的 Token 排序，可先按厂商过滤，同样支持 USD / CNY。
 - **按模型**：选一个模型，看哪些厂商的哪些套餐收录它、各自给多少额度。
@@ -15,9 +16,10 @@
 - 编程榜单：<https://modeldial.com/leaderboard/coding?axis=overall>
 - 文本能力榜：<https://reference.modeldial.com/writing-snapshots/current.json>（页面自身读取的官方快照，客户端渲染的榜靠它取数）
 - Harness 榜：<https://modeldial.com/leaderboard/harness>
+- 真实用量：<https://modeldial.com/trends>
 - 订阅额度：<https://modeldial.com/subscriptions?period=week&view=catalog&currency=CNY>
 
-前三个页面里除文本榜外都是服务端渲染的表格；Host 端抓 HTML 解析，文本榜直接抓同源官方快照 JSON，不跑浏览器、不调第三方 API。
+除文本榜直接读取同源官方快照 JSON 外，其余页面均由 Host 端抓 SSR HTML 解析，不跑浏览器、不调第三方 API。
 
 ## 人民币折算
 
@@ -32,7 +34,7 @@
 
 ## 接口
 
-- `GET /__modeldial/leaderboard`、`GET /__modeldial/quota`、`GET /__modeldial/writing`、`GET /__modeldial/harness`，加 `?force=1` 跳过缓存。
+- `GET /__modeldial/leaderboard`、`GET /__modeldial/quota`、`GET /__modeldial/writing`、`GET /__modeldial/harness`、`GET /__modeldial/trends`，加 `?force=1` 跳过缓存。
 
 ## 安装 / 卸载
 

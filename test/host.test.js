@@ -18,6 +18,7 @@ const BODIES = {
   'https://modeldial.com/subscriptions?period=week&view=catalog&currency=CNY': fixture('quota.html'),
   'https://reference.modeldial.com/writing-snapshots/current.json': fixture('writing.json'),
   'https://modeldial.com/leaderboard/harness': fixture('harness.html'),
+  'https://modeldial.com/trends': fixture('trends.html'),
 }
 
 const realFetch = globalThis.fetch
@@ -136,6 +137,12 @@ test('every route parses its payload and the in-process cache avoids refetching'
   assert.equal(harness.data.rows.length, 5)
   assert.equal(harness.data.rows[0].name, 'Claude Code')
 
+  const trends = await getJson(plugin.base, '/__modeldial/trends')
+  assert.equal(trends.ok, true)
+  assert.equal(trends.data.rows.length, 26)
+  assert.equal(trends.data.rows[0].name, 'Claude Fable 5.2')
+  assert.equal(trends.data.vendors.length, 7)
+
   // writing is the one source with an ETag: a forced refresh revalidates and
   // keeps the payload instead of erroring on the 304
   const revalidated = await getJson(plugin.base, '/__modeldial/writing?force=1')
@@ -144,7 +151,7 @@ test('every route parses its payload and the in-process cache avoids refetching'
   assert.equal(revalidated.data.rows.length, 10)
 
   // every successful payload is mirrored to disk
-  for (const key of ['leaderboard', 'quota', 'writing', 'harness']) {
+  for (const key of ['leaderboard', 'quota', 'writing', 'harness', 'trends']) {
     const saved = JSON.parse(await readFile(join(home, 'cache', 'modeldial-leaderboard', `${key}.json`), 'utf8'))
     assert.equal(saved.key, key)
     assert.ok(saved.fetchedAt)

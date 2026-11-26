@@ -21,6 +21,7 @@ const SOURCES = {
   quota: 'https://modeldial.com/subscriptions?period=week&view=catalog&currency=CNY',
   writing: 'https://reference.modeldial.com/writing-snapshots/current.json',
   harness: 'https://modeldial.com/leaderboard/harness',
+  trends: 'https://modeldial.com/trends',
 }
 
 const QUOTA_PROVIDERS = [
@@ -96,11 +97,26 @@ async function main() {
   const harnessRows = takeBlocks(harness, /<tr\b[^>]*\bdata-harness="[^"]+"[^>]*>[\s\S]*?<\/tr>/g, 5)
   await writeFile(join(OUT, 'harness.html'), harnessRows + '\n', 'utf8')
 
+  const trends = await get(SOURCES.trends)
+  const trendsMeta = (trends.match(/更新至\s*[0-9.]+[\s\S]{0,160}?日窗口）/) || [''])[0]
+  const trendsAnchors = takeBlocks(trends, /<div class="[^"]*__anchorItem"[^>]*>[\s\S]*?<\/div>\s*<\/div>/g, 3)
+  const trendsVendors = (trends.match(/<svg[^>]*aria-label="各厂商 API 账单占比排行[^"]*"[^>]*>[\s\S]*?<\/svg>/) || [''])[0]
+  const trendsAllRows = [...trends.matchAll(/<tr\b[^>]*\bid="adoption-row-[^"]+"[^>]*>[\s\S]*?<\/tr>/g)].map(m => m[0])
+  const pickedTrends = []
+  for (const row of trendsAllRows) {
+    if (pickedTrends.length < 16 || /__freeChip|90 日前已发布/.test(row)) {
+      if (!pickedTrends.includes(row)) pickedTrends.push(row)
+    }
+  }
+  const trendsFixture = [trendsMeta, trendsAnchors, trendsVendors, '<table><tbody>', ...pickedTrends, '</tbody></table>'].filter(Boolean).join('\n')
+  await writeFile(join(OUT, 'trends.html'), trendsFixture + '\n', 'utf8')
+
   console.log('fixtures written to', OUT)
   console.log('leaderboard rows:', (leaderboardRows.match(/data-model=/g) || []).length)
   console.log('quota providers:', QUOTA_PROVIDERS.length)
   console.log('writing rows:', sampleRows.length)
   console.log('harness rows:', (harnessRows.match(/data-harness=/g) || []).length)
+  console.log('trends rows:', pickedTrends.length)
 }
 
 main().catch(error => {

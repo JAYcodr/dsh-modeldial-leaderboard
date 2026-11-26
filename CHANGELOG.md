@@ -1,5 +1,13 @@
 # 变更记录
 
+## 1.2.0 — 2026-11-26
+
+### 新增
+
+- **真实用量**页签（第 8 个页签）：接入上游 `https://modeldial.com/trends` 与新路由 `GET /__modeldial/trends`（15 分钟 TTL、磁盘落盘与 `?force=1`），展示核心对照摘要、厂商「API 支出 vs Token 用量」双柱对比、OpenRouter 近 14 日 Token 占比、Vercel 近 30 日支出占比与 28 日留存态势。
+- **订阅可用额度联动**：在「真实用量」表中交叉匹配订阅目录，每行直观标出该模型的最高月均可用亿 Token、收录套餐数与起步月费（随 USD/CNY 同步换算），支持「可订阅」一键筛选与按最高月额度排序；展开行明细可查看每个套餐的月费与月均 Token 额度，并一键跳至「按模型」页签细看。
+- 新增 `test/fixtures/trends.html` 及对应解析器、路由和客户端渲染单元测试；`scripts/refresh-fixtures.mjs` 与 `scripts/preview.mjs` 同步支持 `trends`。
+
 ## 1.1.1 — 2026-11-23
 
 ### 视觉打磨（文本能力榜 / Harness 榜）

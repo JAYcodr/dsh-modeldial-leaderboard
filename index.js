@@ -9,6 +9,7 @@
  *   GET /__modeldial/quota         subscription quota matrices per provider
  *   GET /__modeldial/writing       text-capability leaderboard (official feed)
  *   GET /__modeldial/harness       harness leaderboard, one row per harness
+ *   GET /__modeldial/trends        real-world usage, spend & retention (/trends)
  *
  * A short in-process cache keeps the page responsive; `?force=1` bypasses it.
  * A failed fetch is reported as `{ ok: false, error }` together with the last
@@ -48,6 +49,12 @@ const SOURCE = {
     label: 'Harness 榜',
     empty: '页面里没有解析到 Harness 行（结构可能变了）',
   },
+  trends: {
+    url: 'https://modeldial.com/trends',
+    accept: 'text/html,application/xhtml+xml',
+    label: '真实用量',
+    empty: '页面里没有解析到真实用量行（结构可能变了）',
+  },
 }
 
 const ROUTES = {
@@ -55,6 +62,7 @@ const ROUTES = {
   '/__modeldial/quota': { key: 'quota', ttlMs: 10 * 60 * 1000 },
   '/__modeldial/writing': { key: 'writing', ttlMs: 15 * 60 * 1000 },
   '/__modeldial/harness': { key: 'harness', ttlMs: 10 * 60 * 1000 },
+  '/__modeldial/trends': { key: 'trends', ttlMs: 15 * 60 * 1000 },
 }
 
 const FETCH_TIMEOUT_MS = 30 * 1000
@@ -357,6 +365,161 @@ function parseHarness(html) {
   return { rows }
 }
 
+/** Parse numeric percentage or signed delta inside a trends metric string. */
+function parseTrendsPercent(text) {
+  const match = String(text || '').replace(/,/g, '').match(/([+-]?\d+(?:\.\d+)?)\s*%/)
+  return match ? Number(match[1]) : null
+}
+
+/** Parse the /trends SSR page: summary anchors, vendor spend/usage bars, and adoption rows. */
+function parseTrends(html) {
+  const updatedMatch = html.match(/更新至\s*([0-9.]+)/)
+  const catalogMatch = html.match(/(\d+)\s*款公开模型/)
+  const windowMatch = html.match(/(\d+)\s*日窗口/)
+  const medianMatch = html.match(/综合分\s*([\d.]+)\s*\/\s*占比\s*([\d.]+)%/)
+
+  const highlights = []
+  for (const item of html.matchAll(/class="[^"]*__anchorItem"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/g)) {
+    const block = item[1]
+    const label = strip((block.match(/class="[^"]*__anchorLabel"[^>]*>([\s\S]*?)<\/span>/) || ['', ''])[1])
+    const value = strip((block.match(/class="[^"]*__anchorNum"[^>]*>([\s\S]*?)<\/strong>/) || ['', ''])[1])
+    const text = strip((block.match(/class="[^"]*__anchorText"[^>]*>([\s\S]*?)<\/span>/) || ['', ''])[1])
+    if (label && value) highlights.push({ label, value, text })
+  }
+
+  const vendors = []
+  const vendorSvgMatch = html.match(/<svg[^>]*aria-label="各厂商 API 账单占比排行[^"]*"[^>]*>([\s\S]*?)<\/svg>/)
+  if (vendorSvgMatch) {
+    for (const g of vendorSvgMatch[1].matchAll(/<g\b[^>]*data-rank-lab="([^"]+)"[^>]*>([\s\S]*?)<\/g>/g)) {
+      const texts = [...g[2].matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/g)].map(t => strip(t[1])).filter(Boolean)
+      if (texts.length < 2) continue
+      const spendShare = parseTrendsPercent(texts[1])
+      const usageText = texts[2] || ''
+      const usageShare = parseTrendsPercent(usageText)
+      vendors.push({
+        id: g[1],
+        name: texts[0],
+        spendShare,
+        usageShare,
+        usageTop: /第\s*1/.test(usageText),
+      })
+    }
+  }
+
+  const rows = []
+  const rowRe = /<tr\b[^>]*\bid="adoption-row-([^"]+)"[^>]*>([\s\S]*?)<\/tr>/g
+  let m
+  while ((m = rowRe.exec(html)) !== null) {
+    const rawId = m[1]
+    const body = m[2]
+    let key = rawId
+    try { key = decodeURIComponent(rawId) } catch { key = rawId }
+    const linkMatch = body.match(/class="[^"]*__modelLink"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/)
+      || body.match(/class="[^"]*__modelLink"[^>]*>([\s\S]*?)<\/a>/)
+    const name = linkMatch ? strip(linkMatch[linkMatch.length - 1]) : ''
+    if (!name) continue
+    const rawHref = linkMatch && linkMatch.length === 3 ? linkMatch[1].replace(/&amp;/g, '&') : ''
+    const href = rawHref ? (rawHref.startsWith('http') ? rawHref : 'https://modeldial.com' + rawHref) : ''
+
+    const rankText = strip((body.match(/class="[^"]*__rankChip"[^>]*>([\s\S]*?)<\/span>/) || ['', ''])[1])
+    const rankMatch = rankText.match(/(\d+)/)
+    const boardRank = rankMatch ? Number(rankMatch[1]) : null
+
+    const subText = strip((body.match(/class="[^"]*__modelSub"[^>]*>([\s\S]*?)<\/div>/) || ['', ''])[1])
+    const parts = subText.split('·').map(p => p.trim()).filter(Boolean)
+    const vendor = parts[0] || ''
+    let effort = ''
+    let evalCost = ''
+    for (const part of parts.slice(1)) {
+      if (/^\$/.test(part)) evalCost = part
+      else if (/档$/.test(part)) effort = part.replace(/\s*档$/, '').trim()
+    }
+
+    const scoreBlock = (body.match(/class="[^"]*__colScore"[^>]*>([\s\S]*?)<\/div>/) || ['', ''])[1]
+    const score = toScore(strip((scoreBlock.match(/<strong[^>]*>([\s\S]*?)<\/strong>/) || ['', ''])[1]))
+
+    const shareBlock = (body.match(/class="[^"]*__colShare"[^>]*>([\s\S]*?)<\/div>(?=\s*<div class="[^"]*__colSpend")/) || ['', ''])[1]
+    const tokenShare = parseTrendsPercent(strip((shareBlock.match(/<strong[^>]*>([\s\S]*?)<\/strong>/) || ['', ''])[1]))
+    const shareNote = strip((shareBlock.match(/class="[^"]*__subMetric[^"]*"[^>]*>([\s\S]*?)<\/span>/) || ['', ''])[1])
+    const deltaMatch = shareNote.match(/([+-]?\d+(?:\.\d+)?)\s*百分点/)
+    const shareDelta = deltaMatch ? Number(deltaMatch[1]) : null
+
+    const spendBlock = (body.match(/class="[^"]*__colSpend"[^>]*>([\s\S]*?)<\/div>(?=\s*<div class="[^"]*__colRetention")/) || ['', ''])[1]
+    const spendShare = parseTrendsPercent(strip((spendBlock.match(/<strong[^>]*>([\s\S]*?)<\/strong>/) || ['', ''])[1]))
+    const spendNote = strip((spendBlock.match(/class="[^"]*__subMetric[^"]*"[^>]*>([\s\S]*?)<\/span>/) || ['', ''])[1])
+
+    const retBlock = (body.match(/class="[^"]*__colRetention"[^>]*>([\s\S]*?)<\/div>(?=\s*<div class="[^"]*__colActions")/) || ['', ''])[1]
+    const pillMatch = retBlock.match(/class="[^"]*__pillTag\s+([^"]*)"[^>]*>([\s\S]*?)<\/span>/)
+    const pillClass = pillMatch ? pillMatch[1] : ''
+    let retentionTag = pillMatch ? strip(pillMatch[2]) : ''
+    if (!retentionTag) {
+      retentionTag = strip((retBlock.match(/class="[^"]*__mutedDash"[^>]*>([\s\S]*?)<\/span>/) || ['', ''])[1])
+    }
+    let retentionTone = 'muted'
+    if (/tagPos/.test(pillClass)) retentionTone = 'pos'
+    else if (/tagAccent/.test(pillClass)) retentionTone = 'accent'
+    else if (/tagWarn/.test(pillClass)) retentionTone = 'warn'
+    else if (/tagNeg/.test(pillClass)) retentionTone = 'neg'
+    else if (/tagNeutral/.test(pillClass)) retentionTone = 'neutral'
+
+    const retentionChange = strip((retBlock.match(/class="[^"]*__retChange"[^>]*>([\s\S]*?)<\/strong>/) || ['', ''])[1])
+    const changePctMatch = retentionChange.match(/([+-]?\d+(?:\.\d+)?)\s*%/)
+    const retentionChangePct = changePctMatch ? Number(changePctMatch[1]) : null
+    const lowBase = strip((retBlock.match(/class="[^"]*__lowBaseTag"[^>]*>([\s\S]*?)<\/span>/) || ['', ''])[1])
+
+    const stagesHtml = (retBlock.match(/class="[^"]*__retStages"[^>]*>([\s\S]*?)<\/div>/) || ['', ''])[1]
+    const stages = []
+    if (stagesHtml) {
+      for (const s of stagesHtml.matchAll(/<span\b[^>]*>([\s\S]*?)<\/span>/g)) {
+        if (/__stageArrow/.test(s[0])) continue
+        const text = strip(s[1])
+        if (text && text !== '→') stages.push(text)
+      }
+    }
+
+    const isFree = /__freeChip/.test(body)
+    const isNew28 = /观察期/.test(lowBase) || /^上线\s*\d+\s*天/.test(retentionTag)
+    const isFull28 = Boolean(retentionChange)
+
+    rows.push({
+      rank: String(rows.length + 1).padStart(2, '0'),
+      key,
+      name,
+      href,
+      boardRank,
+      vendor,
+      effort,
+      evalCost,
+      isFree,
+      score,
+      tokenShare,
+      shareNote,
+      shareDelta,
+      spendShare,
+      spendNote,
+      retentionTag: retentionTag === '—' ? '' : retentionTag,
+      retentionTone,
+      retentionChange,
+      retentionChangePct,
+      lowBase,
+      stages,
+      isNew28,
+      isFull28,
+    })
+  }
+  if (rows.length === 0) throw new Error('真实用量页里没有解析到模型行')
+
+  return {
+    updatedAt: updatedMatch ? updatedMatch[1] : '',
+    catalogCount: catalogMatch ? Number(catalogMatch[1]) : rows.length,
+    windowDays: windowMatch ? Number(windowMatch[1]) : 90,
+    medians: medianMatch ? { score: Number(medianMatch[1]), share: Number(medianMatch[2]) } : null,
+    highlights,
+    vendors,
+    rows,
+  }
+}
+
 const PARSERS = {
   leaderboard: parseLeaderboard,
   quota: parseQuota,
@@ -370,17 +533,18 @@ const PARSERS = {
     return parseWriting(payload)
   },
   harness: parseHarness,
+  trends: parseTrends,
 }
 
 /** How many rows a payload carries; used to reject empty parses and validate disk cache. */
 function rowCount(key, data) {
   if (!data) return 0
-  if (key === 'writing' || key === 'harness') return Array.isArray(data.rows) ? data.rows.length : 0
+  if (key === 'writing' || key === 'harness' || key === 'trends') return Array.isArray(data.rows) ? data.rows.length : 0
   return Array.isArray(data) ? data.length : 0
 }
 
 /** Exposed so the parsers can be exercised against saved HTML without restarting DSH. */
-export const __test = { parseLeaderboard, parseQuota, parseWriting, parseHarness, toYi, toScore, rowCount }
+export const __test = { parseLeaderboard, parseQuota, parseWriting, parseHarness, parseTrends, toYi, toScore, rowCount }
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -500,6 +664,7 @@ export function apply(ctx) {
     quota: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
     writing: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
     harness: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
+    trends: { at: 0, data: null, pending: null, etag: '', from: null, loaded: false },
   }
 
   /** Payload shape never changes; `from` only says where the bytes came from. */

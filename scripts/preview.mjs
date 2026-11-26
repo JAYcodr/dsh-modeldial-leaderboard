@@ -46,13 +46,13 @@ const live = args.get('live') || ''
 // a half-faded row (docs images, and pixel diffs)
 const staticMode = args.get('static') === 'true'
 const tabList = args.get('all') === 'true'
-  ? ['board', 'writing', 'harness', 'quota', 'value', 'model', 'budget']
+  ? ['board', 'writing', 'harness', 'trends', 'quota', 'value', 'model', 'budget']
   : [args.get('tab') || 'board']
 
 const fixture = name => fs.readFileSync(join(ROOT, 'test', 'fixtures', name), 'utf8')
 
 async function liveFeeds(base) {
-  const paths = ['/__modeldial/leaderboard', '/__modeldial/quota', '/__modeldial/writing', '/__modeldial/harness']
+  const paths = ['/__modeldial/leaderboard', '/__modeldial/quota', '/__modeldial/writing', '/__modeldial/harness', '/__modeldial/trends']
   const slots = []
   for (const path of paths) {
     const response = await fetch(base.replace(/\/$/, '') + path)
@@ -70,12 +70,14 @@ let feeds = empty
     { loading: false, busy: false, payload: { ok: true, data: [] }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: { rows: [] } }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: { rows: [] } }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: { rows: [] } }, error: null },
   ]
   : [
     { loading: false, busy: false, payload: { ok: true, data: __test.parseLeaderboard(fixture('leaderboard.html')) }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: __test.parseQuota(fixture('quota.html')) }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: __test.parseWriting(JSON.parse(fixture('writing.json'))) }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: __test.parseHarness(fixture('harness.html')) }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: __test.parseTrends(fixture('trends.html')) }, error: null },
   ]
 
 if (live) feeds = await liveFeeds(live)
@@ -184,8 +186,8 @@ const PAGE = loadPage()
 
 /** Host theme tokens are the only thing faked here. */
 const TOKENS = dark
-  ? `--dsw-alias-label-primary:#e9e9ec;--dsw-alias-label-secondary:#a4a5ab;--dsw-alias-label-tertiary:#6f7077;--dsw-alias-bg-base:#17181c;--dsw-alias-state-error-primary:#ff6b6b`
-  : `--dsw-alias-label-primary:#1d1d1f;--dsw-alias-label-secondary:#55555c;--dsw-alias-label-tertiary:#8e8e93;--dsw-alias-bg-base:#ffffff;--dsw-alias-state-error-primary:#c0392b`
+  ? `--dsw-alias-label-primary:#e9e9ec;--dsw-alias-label-secondary:#a4a5ab;--dsw-alias-label-tertiary:#6f7077;--dsw-alias-bg-base:#17181c;--dsw-alias-state-error-primary:#ff6b6b;--dsw-alias-state-success-primary:#38b778`
+  : `--dsw-alias-label-primary:#1d1d1f;--dsw-alias-label-secondary:#55555c;--dsw-alias-label-tertiary:#8e8e93;--dsw-alias-bg-base:#ffffff;--dsw-alias-state-error-primary:#c0392b;--dsw-alias-state-success-primary:#1f7a4c`
 
 function pageFor(tab) {
   feedIndex = 0

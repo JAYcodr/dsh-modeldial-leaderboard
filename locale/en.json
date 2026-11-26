@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Modeldial board",
-    "description": "Opens the Modeldial coding, text-capability and harness leaderboards plus the subscription quota catalog from the sidebar: per-axis scores for 55 models, 8 text axes for 38 models, 8 capability domains for 23 harnesses, and every plan's quota. Manual refresh included.",
+    "description": "Opens the Modeldial coding, text-capability, harness and real-usage boards plus the subscription quota catalog from the sidebar: per-axis scores, OpenRouter/Vercel usage & retention cross-referenced with monthly subscription token allowances. Manual refresh included.",
     "detail": "docs/DETAIL.md"
   }
 }

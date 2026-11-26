@@ -141,6 +141,48 @@ window.__ModuleLoader__.load({
       kpiHarness: 'Harness 本体',
       kpiDomains: 'Domains 场景域',
       harnessCount: '{n} 个 Harness',
+      tabTrends: '真实用量',
+      trendsSub: 'OpenRouter 14 日 Token 占比 · Vercel API 支出与留存 · 对照订阅可用额度',
+      kpiTrendsModels: 'Active 活跃模型',
+      kpiTrendsDate: 'Updated 数据截止',
+      secTrendsSummary: '核心风向',
+      secTrendsSummaryRight: '{n} 款公开模型 · {d} 日窗口',
+      secTrendsVendors: '厂商花钱 vs 用量',
+      secTrendsVendorsRight: 'Vercel 近 30 日账单 vs OpenRouter 用量',
+      trendsVendorsNote: '对照每家分走的 API 账单占比与实际 Token 用量占比',
+      secTrendsTable: '真实用量 × 留存 × 订阅额度',
+      trendsCount: '{n} 个模型',
+      trendsFilterAll: '全部活跃',
+      trendsFilterSub: '可订阅',
+      trendsFilterFull28: '满 28 日',
+      trendsFilterNew28: '新发 <28 日',
+      trendsFilterSpend: 'Vercel 支出榜',
+      trendsFilterPaid: '仅付费',
+      trendsAllVendors: '全部厂商',
+      vendorBySpend: '按支出',
+      vendorByUsage: '按用量',
+      colTrendScore: '实测分',
+      colTokenShare: '14 日 Token 占比',
+      colVercelSpend: 'Vercel 支出',
+      colRetention: '留存态势',
+      colSubQuota: '订阅可用额度',
+      colDetail: '明细',
+      subMaxQuota: '最高 ≈ {v} 亿/月',
+      subPlanSummary: '{p} 家 {n} 套餐 · {price}/月起',
+      subUnknownSummary: '{p} 家 {n} 套餐 · 额度未知',
+      subApiOnly: '仅 API / 免费',
+      subNotLoaded: '额度加载中…',
+      subJumpModel: '在「按模型」中细看 →',
+      subPlansHeading: '收录该模型的订阅套餐（月均可用 Token）',
+      subNoPlansDetail: '当前订阅目录未收录该模型，仅能通过 API 或官方网页/免费额度使用。',
+      trendsStageHeading: '留存与评测参考',
+      trendsUsageTag: '用量第 1',
+      trendsSpendBar: '支出',
+      trendsUsageBar: '用量',
+      trendsEvalCost: '评测费 {cost}',
+      trendsEffort: '{effort} 档',
+      trendsRankChip: '实测 #{n}',
+      trendsFree: '免费版',
     }
 
     const en = {
@@ -267,6 +309,48 @@ window.__ModuleLoader__.load({
       kpiHarness: 'Harnesses',
       kpiDomains: 'Domains',
       harnessCount: '{n} harnesses',
+      tabTrends: 'Real usage',
+      trendsSub: 'OpenRouter 14d token share · Vercel spend & retention · linked to subscription quotas',
+      kpiTrendsModels: 'Active models',
+      kpiTrendsDate: 'Updated through',
+      secTrendsSummary: 'Key signals',
+      secTrendsSummaryRight: '{n} models · {d}d window',
+      secTrendsVendors: 'Spend vs. token share',
+      secTrendsVendorsRight: 'Vercel 30d spend vs. OpenRouter share',
+      trendsVendorsNote: 'Compare API bill share against actual token share per vendor',
+      secTrendsTable: 'Usage · retention · subscription quota',
+      trendsCount: '{n} models',
+      trendsFilterAll: 'All active',
+      trendsFilterSub: 'Subscribable',
+      trendsFilterFull28: '28d+ live',
+      trendsFilterNew28: 'New <28d',
+      trendsFilterSpend: 'Vercel spend',
+      trendsFilterPaid: 'Paid only',
+      trendsAllVendors: 'All vendors',
+      vendorBySpend: 'By spend',
+      vendorByUsage: 'By usage',
+      colTrendScore: 'Score',
+      colTokenShare: '14d Token share',
+      colVercelSpend: 'Vercel spend',
+      colRetention: 'Retention',
+      colSubQuota: 'Subscription quota',
+      colDetail: 'Details',
+      subMaxQuota: 'Up to ≈ {v} ×100M/mo',
+      subPlanSummary: '{p} vendors · {n} plans · from {price}/mo',
+      subUnknownSummary: '{p} vendors · {n} plans · quota unknown',
+      subApiOnly: 'API / free only',
+      subNotLoaded: 'Loading quotas…',
+      subJumpModel: 'Inspect in "By model" →',
+      subPlansHeading: 'Subscription plans carrying this model (monthly token quota)',
+      subNoPlansDetail: 'Not included in the tracked subscription catalog; available via API or web tier only.',
+      trendsStageHeading: 'Retention stages & eval cost',
+      trendsUsageTag: '#1 usage',
+      trendsSpendBar: 'Spend',
+      trendsUsageBar: 'Usage',
+      trendsEvalCost: 'Eval {cost}',
+      trendsEffort: '{effort}',
+      trendsRankChip: 'Rank #{n}',
+      trendsFree: 'Free',
     }
 
     const SCORE_COLUMNS = [
@@ -1338,6 +1422,203 @@ window.__ModuleLoader__.load({
       .mdlb-axis .mdlb-bar > i { animation-delay: calc(var(--axis-i, 0) * 24ms + 40ms); }
       .mdlb-axis > b { text-align: right; font-weight: 600; font-size: 12.5px; color: var(--mdlb-ink); }
 
+      /* ---------- 真实用量页：摘要条、厂商花钱vs用量、留存与订阅映射 ---------- */
+      .mdlb-anchors {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-bottom: 1px solid var(--mdlb-rule);
+      }
+      .mdlb-anchor {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 15px 20px 16px 0;
+        border-right: 1px solid var(--mdlb-rule);
+        min-width: 0;
+      }
+      .mdlb-anchor:last-child { border-right: 0; padding-right: 0; }
+      .mdlb-anchor:not(:first-child) { padding-left: 20px; }
+      .mdlb-anchor-l {
+        font-size: 11.5px;
+        letter-spacing: .06em;
+        color: var(--mdlb-ink3);
+      }
+      .mdlb-anchor-n {
+        font-size: 32px;
+        font-weight: 450;
+        letter-spacing: -.04em;
+        line-height: 1;
+        color: var(--mdlb-accent);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-anchor-t {
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--mdlb-ink2);
+        text-wrap: pretty;
+      }
+      .mdlb-vendor-list {
+        display: flex;
+        flex-direction: column;
+        padding: 4px 0;
+      }
+      .mdlb-vendor-row {
+        display: grid;
+        grid-template-columns: minmax(110px, 140px) minmax(0, 1fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 10px 22px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--mdlb-rule);
+      }
+      .mdlb-vendor-row:last-child { border-bottom: 0; }
+      .mdlb-vendor-name {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 560;
+        color: var(--mdlb-ink);
+        min-width: 0;
+        white-space: nowrap;
+      }
+      .mdlb-vendor-metric {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 52px;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--mdlb-ink2);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-vendor-metric > span:first-child { font-size: 11.5px; color: var(--mdlb-ink3); }
+      .mdlb-vendor-metric > b { text-align: right; font-weight: 600; color: var(--mdlb-ink); }
+      .mdlb-vendor-metric .mdlb-bar { width: 100%; height: 4px; }
+      .mdlb-vendor-metric[data-kind="usage"] .mdlb-bar > i {
+        background: color-mix(in srgb, var(--mdlb-ink) 52%, transparent);
+      }
+      .mdlb-chip[data-tone="pos"] {
+        color: color-mix(in srgb, var(--dsw-alias-state-success-primary, #1f7a4c) 80%, var(--mdlb-ink));
+        border-color: color-mix(in srgb, var(--dsw-alias-state-success-primary, #1f7a4c) 44%, transparent);
+        background: color-mix(in srgb, var(--dsw-alias-state-success-primary, #1f7a4c) 9%, transparent);
+        font-weight: 580;
+      }
+      .mdlb-chip[data-tone="warn"] {
+        color: var(--mdlb-ink2);
+        border-color: var(--mdlb-rule-w);
+        background: var(--mdlb-wash);
+      }
+      .mdlb-trend-model {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 196px;
+        max-width: 280px;
+      }
+      .mdlb-trend-model-top {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+      .mdlb-trend-model-top a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 550;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border-bottom: 1px solid transparent;
+        transition: color .12s ease, border-color .12s ease;
+      }
+      .mdlb-trend-model-top a:hover { color: var(--mdlb-accent); border-bottom-color: var(--mdlb-accent); }
+      .mdlb-trend-sub {
+        font-size: 11.5px;
+        color: var(--mdlb-ink3);
+        white-space: nowrap;
+      }
+      .mdlb-ret-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+      }
+      .mdlb-ret-top {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .mdlb-ret-delta {
+        font-size: 12px;
+        font-weight: 580;
+        color: var(--mdlb-ink2);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-ret-stages {
+        font-size: 11.5px;
+        color: var(--mdlb-ink3);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-trend-detail {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 14px 14px;
+      }
+      .mdlb-trend-detail-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .mdlb-trend-detail-title {
+        font-size: 11.5px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--mdlb-ink2);
+      }
+      .mdlb-trend-plans {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(276px, 1fr));
+        gap: 8px 14px;
+      }
+      .mdlb-trend-plan {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 9px 11px;
+        border: 1px solid var(--mdlb-rule);
+        background: var(--dsw-alias-bg-base);
+      }
+      .mdlb-trend-plan-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12.5px;
+      }
+      .mdlb-trend-plan-top b { font-weight: 600; color: var(--mdlb-ink); }
+      .mdlb-trend-plan-top span { font-size: 11.5px; color: var(--mdlb-ink3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .mdlb-trend-plan-quota {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        font-size: 12px;
+        color: var(--mdlb-ink2);
+        font-variant-numeric: tabular-nums;
+      }
+      .mdlb-trend-plan-quota b { color: var(--mdlb-accent); font-size: 13px; font-weight: 650; white-space: nowrap; }
+      .mdlb-trend-plan-quota > span { white-space: nowrap; }
+      @container (max-width: 780px) {
+        .mdlb-anchors { grid-template-columns: 1fr; }
+        .mdlb-anchor { border-right: 0; border-bottom: 1px solid var(--mdlb-rule); padding: 12px 0 !important; }
+        .mdlb-anchor:last-child { border-bottom: 0; }
+        .mdlb-vendor-row { grid-template-columns: 1fr; gap: 6px; }
+      }
+
       /* 骨架 */
       .mdlb-skel {
         display: block; border-radius: 0;
@@ -1713,6 +1994,48 @@ window.__ModuleLoader__.load({
         .sort((a, b) => b.plans - a.plans || a.model.localeCompare(b.model, 'zh'))
     }
 
+    /** Per-model subscription quota index, used by the Real Usage view to show token allowances at a glance. */
+    function quotaSummaryByModel(entries) {
+      const map = new Map()
+      for (const entry of entries) {
+        for (const item of entry.models) {
+          let slot = map.get(item.model)
+          if (!slot) {
+            slot = { model: item.model, providers: new Set(), plans: [], maxQuotaYi: null, minPriceUsd: null }
+            map.set(item.model, slot)
+          }
+          slot.providers.add(entry.provider)
+          if (slot.minPriceUsd === null || entry.priceUsd < slot.minPriceUsd) slot.minPriceUsd = entry.priceUsd
+          if (item.quotaKnown !== false && item.quota !== null) {
+            if (slot.maxQuotaYi === null || item.quota > slot.maxQuotaYi) slot.maxQuotaYi = item.quota
+          }
+          slot.plans.push({
+            id: entry.id,
+            provider: entry.provider,
+            plan: entry.plan,
+            priceUsd: entry.priceUsd,
+            quota: item.quota,
+            quotaKnown: item.quotaKnown !== false,
+            quotaRaw: item.quotaRaw,
+            quotaPeriod: item.quotaPeriod,
+            apiNum: item.apiNum,
+            perDollar: item.perDollar,
+            perDollarRaw: item.perDollarRaw,
+          })
+        }
+      }
+      for (const slot of map.values()) {
+        slot.providerCount = slot.providers.size
+        slot.planCount = slot.plans.length
+        slot.plans.sort((a, b) => {
+          const qa = a.quotaKnown && a.quota !== null ? a.quota : -1
+          const qb = b.quotaKnown && b.quota !== null ? b.quota : -1
+          return qb - qa || (b.perDollar || 0) - (a.perDollar || 0) || a.priceUsd - b.priceUsd
+        })
+      }
+      return map
+    }
+
     /** USD to CNY rate, with a fixed fallback when the service is unreachable. */
     function useRate() {
       const [rate, setRate] = useState({ value: RATE_FALLBACK, source: 'fallback' })
@@ -1858,6 +2181,17 @@ window.__ModuleLoader__.load({
     /** 文本榜 / Harness 榜：除模型名外都是裸数值。 */
     function boardPick(row, key) {
       return key === 'model' ? row.name : row[key]
+    }
+
+    /** 真实用量页排序取值：订阅额度按最高月均亿 Token 排，未收录排底。 */
+    function trendsPick(row, key) {
+      if (key === 'model') return row.name
+      if (key === 'retention') return row.retentionChangePct
+      if (key === 'subQuota') {
+        if (!row.sub) return null
+        return row.sub.maxQuotaYi !== null ? row.sub.maxQuotaYi : -1
+      }
+      return row[key]
     }
 
     /** 前三名卡片骨架：编程 / 文本 / Harness 共用一套结构，避免大字报留白过空。 */
@@ -2134,6 +2468,332 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /**
+     * 真实用量页：把 ModelDial 实测分、OpenRouter 14 日 Token 占比、Vercel 支出与留存，
+     * 跟本地订阅额度交叉对照，让「哪些热门模型能靠订阅拿到、每月给多少亿 Token」一目了然。
+     */
+    function TrendsTable({ trends, quotaReady, t, query, onQuery, currency, onCurrency, rate, onInspectModel }) {
+      const [cohort, setCohort] = useState('all')
+      const [vendor, setVendor] = useState('*')
+      const [vendorMode, setVendorMode] = useState('spend')
+      const [open, setOpen] = useState(null)
+
+      const rows = (trends && trends.rows) || []
+      const highlights = (trends && trends.highlights) || []
+      const vendors = (trends && trends.vendors) || []
+
+      const sortedVendors = useMemo(() => {
+        const list = vendors.slice()
+        list.sort((a, b) => vendorMode === 'usage'
+          ? (b.usageShare || 0) - (a.usageShare || 0)
+          : (b.spendShare || 0) - (a.spendShare || 0))
+        return list
+      }, [vendors, vendorMode])
+
+      const vendorMax = useMemo(() => sortedVendors.reduce((m, v) => Math.max(m, v.spendShare || 0, v.usageShare || 0), 0) || 50, [sortedVendors])
+
+      const counts = useMemo(() => ({
+        all: rows.length,
+        sub: rows.filter(r => Boolean(r.sub)).length,
+        full28: rows.filter(r => r.isFull28).length,
+        new28: rows.filter(r => r.isNew28).length,
+        spend: rows.filter(r => r.spendShare !== null).length,
+        paid: rows.filter(r => !r.isFree).length,
+      }), [rows])
+
+      const vendorItems = useMemo(() => {
+        const map = new Map()
+        for (const row of rows) {
+          if (!row.vendor) continue
+          map.set(row.vendor, (map.get(row.vendor) || 0) + 1)
+        }
+        return [...map.entries()].map(([name, count]) => ({ name, count }))
+      }, [rows])
+
+      const filtered = useMemo(() => {
+        const needle = query.trim().toLowerCase()
+        return rows.filter(row => {
+          if (cohort === 'sub' && !row.sub) return false
+          if (cohort === 'full28' && !row.isFull28) return false
+          if (cohort === 'new28' && !row.isNew28) return false
+          if (cohort === 'spend' && row.spendShare === null) return false
+          if (cohort === 'paid' && row.isFree) return false
+          if (vendor !== '*' && row.vendor !== vendor) return false
+          if (needle && !(row.name + ' ' + row.vendor + ' ' + row.effort).toLowerCase().includes(needle)) return false
+          return true
+        })
+      }, [rows, cohort, vendor, query])
+
+      const { sort, onSort, sorted } = useRankSort(filtered, trendsPick)
+      const maxTokenShare = useMemo(() => rows.reduce((m, r) => Math.max(m, r.tokenShare || 0), 0) || 1, [rows])
+      const maxSpendShare = useMemo(() => rows.reduce((m, r) => Math.max(m, r.spendShare || 0), 0) || 1, [rows])
+      const maxSubQuota = useMemo(() => rows.reduce((m, r) => Math.max(m, (r.sub && r.sub.maxQuotaYi) || 0), 0) || 1, [rows])
+
+      const money = usd => currency === 'CNY'
+        ? '¥' + Math.round(usd * rate.value).toLocaleString('en-US')
+        : '$' + (usd % 1 === 0 ? usd : usd.toFixed(2))
+
+      const retentionToneAttr = toneName => {
+        if (toneName === 'pos') return 'pos'
+        if (toneName === 'accent') return 'new'
+        if (toneName === 'neg') return 'short'
+        if (toneName === 'warn') return 'warn'
+        return undefined
+      }
+
+      const cohorts = [
+        ['all', t('trendsFilterAll'), counts.all],
+        ['sub', t('trendsFilterSub'), counts.sub],
+        ['full28', t('trendsFilterFull28'), counts.full28],
+        ['new28', t('trendsFilterNew28'), counts.new28],
+        ['spend', t('trendsFilterSpend'), counts.spend],
+        ['paid', t('trendsFilterPaid'), counts.paid],
+      ]
+
+      return h('div', { className: 'mdlb-main' },
+        highlights.length > 0
+          ? [
+            h(SectionBar, {
+              key: 's1',
+              no: '01',
+              title: t('secTrendsSummary'),
+              right: t('secTrendsSummaryRight', { n: trends.catalogCount || rows.length, d: trends.windowDays || 90 }),
+            }),
+            h('div', { key: 'a1', className: 'mdlb-anchors' },
+              highlights.map(item => h('div', { key: item.label, className: 'mdlb-anchor' },
+                h('div', { className: 'mdlb-anchor-l' }, item.label),
+                h('div', { className: 'mdlb-anchor-n' }, item.value),
+                h('div', { className: 'mdlb-anchor-t' }, item.text),
+              ))),
+          ]
+          : null,
+        sortedVendors.length > 0
+          ? [
+            h(SectionBar, { key: 's2', no: highlights.length > 0 ? '02' : '01', title: t('secTrendsVendors'), right: t('secTrendsVendorsRight') }),
+            h('div', { key: 'v2', className: 'mdlb-card' },
+              h('div', { className: 'mdlb-card-top' },
+                h('div', { className: 'mdlb-toolbar-left' },
+                  h('span', { className: 'mdlb-note' }, t('trendsVendorsNote'))),
+                h('div', { className: 'mdlb-toolbar-right' },
+                  h('div', { className: 'mdlb-seg' },
+                    h('button', { className: 'mdlb-seg-btn', 'data-active': String(vendorMode === 'spend'), onClick: () => setVendorMode('spend') }, t('vendorBySpend')),
+                    h('button', { className: 'mdlb-seg-btn', 'data-active': String(vendorMode === 'usage'), onClick: () => setVendorMode('usage') }, t('vendorByUsage')),
+                  ),
+                ),
+              ),
+              h('div', { className: 'mdlb-vendor-list' },
+                sortedVendors.map(v => h('div', { key: v.id || v.name, className: 'mdlb-vendor-row' },
+                  h('div', { className: 'mdlb-vendor-name' },
+                    h('span', null, v.name),
+                    v.usageTop ? h('span', { className: 'mdlb-chip', 'data-tone': 'new' }, t('trendsUsageTag')) : null,
+                  ),
+                  h('div', { className: 'mdlb-vendor-metric', 'data-kind': 'spend' },
+                    h('span', null, t('trendsSpendBar')),
+                    h('i', { className: 'mdlb-bar' },
+                      h('i', { style: { width: `${vendorMax ? Math.max(2, Math.round(((v.spendShare || 0) / vendorMax) * 100)) : 0}%` } })),
+                    h('b', null, v.spendShare === null ? '—' : v.spendShare.toFixed(1) + '%'),
+                  ),
+                  h('div', { className: 'mdlb-vendor-metric', 'data-kind': 'usage' },
+                    h('span', null, t('trendsUsageBar')),
+                    h('i', { className: 'mdlb-bar' },
+                      h('i', { style: { width: `${vendorMax ? Math.max(2, Math.round(((v.usageShare || 0) / vendorMax) * 100)) : 0}%` } })),
+                    h('b', null, v.usageShare === null ? '—' : v.usageShare.toFixed(1) + '%'),
+                  ),
+                ))),
+            ),
+          ]
+          : null,
+        h(SectionBar, {
+          no: (highlights.length > 0 ? 1 : 0) + (sortedVendors.length > 0 ? 1 : 0) + 1 > 9
+            ? String((highlights.length > 0 ? 1 : 0) + (sortedVendors.length > 0 ? 1 : 0) + 1)
+            : '0' + ((highlights.length > 0 ? 1 : 0) + (sortedVendors.length > 0 ? 1 : 0) + 1),
+          title: t('secTrendsTable'),
+          right: t('trendsCount', { n: sorted.length }),
+        }),
+        h('div', { className: 'mdlb-card' },
+          h('div', { className: 'mdlb-card-top' },
+            h('div', { className: 'mdlb-toolbar-left' },
+              h('div', { className: 'mdlb-providers' },
+                cohorts.map(([id, label, count], idx) => [
+                  idx === 1 ? h('span', { key: 'sep', className: 'mdlb-providers-sep', 'aria-hidden': 'true' }) : null,
+                  h('button', {
+                    key: id,
+                    className: 'mdlb-provider',
+                    'data-all': id === 'all' ? 'true' : undefined,
+                    'data-active': String(cohort === id),
+                    onClick: () => setCohort(id),
+                  }, h('span', null, label), h('span', { className: 'mdlb-provider-n' }, String(count))),
+                ]),
+              ),
+              vendorItems.length > 0
+                ? h('select', {
+                  className: 'mdlb-select',
+                  style: { flex: '0 1 auto', minWidth: 120, maxWidth: 180, padding: '4px 10px', fontSize: 12, lineHeight: 1.35 },
+                  value: vendor,
+                  onChange: event => setVendor(event.target.value),
+                },
+                h('option', { value: '*' }, t('trendsAllVendors')),
+                vendorItems.map(item => h('option', { key: item.name, value: item.name }, item.name + ' · ' + item.count)))
+                : null,
+            ),
+            h('div', { className: 'mdlb-toolbar-right' },
+              h(CurrencySwitch, { currency, onCurrency, rate, t }),
+              h('input', {
+                className: 'mdlb-search',
+                type: 'search',
+                placeholder: t('searchPlaceholder'),
+                value: query,
+                onChange: event => onQuery(event.target.value),
+              }),
+            ),
+          ),
+          h('div', { className: 'mdlb-body' },
+            h('table', { className: 'mdlb-table', 'data-wide': 'true' },
+              h('thead', null, h('tr', null,
+                h(SortHead, { key: 'model', colKey: 'model', label: t('colModel'), left: true, sort, onSort }),
+                h(SortHead, { key: 'score', colKey: 'score', label: t('colTrendScore'), sort, onSort }),
+                h(SortHead, { key: 'tokenShare', colKey: 'tokenShare', label: t('colTokenShare'), sort, onSort }),
+                h(SortHead, { key: 'spendShare', colKey: 'spendShare', label: t('colVercelSpend'), sort, onSort }),
+                h(SortHead, { key: 'retention', colKey: 'retention', label: t('colRetention'), left: true, sort, onSort }),
+                h(SortHead, { key: 'subQuota', colKey: 'subQuota', label: t('colSubQuota'), sort, onSort }),
+                h('th', { key: 'detail', scope: 'col', className: 'mdlb-axes-cell' }, t('colDetail')),
+              )),
+              h('tbody', null, sorted.length === 0
+                ? h('tr', { key: '__empty__' }, h('td', { className: 'mdlb-empty-cell', colSpan: 7 },
+                  h('div', { className: 'mdlb-empty mdlb-empty--board' },
+                    h('span', { className: 'mdlb-empty-title' }, t('noMatch')),
+                    h('span', null, t('noMatchHint')))))
+                : sorted.map((row, i) => {
+                  const expanded = open === row.key
+                  const sub = row.sub
+                  const metaParts = [
+                    row.vendor || null,
+                    row.effort ? t('trendsEffort', { effort: row.effort }) : null,
+                    row.evalCost ? t('trendsEvalCost', { cost: row.evalCost }) : null,
+                  ].filter(Boolean)
+                  return [
+                    h('tr', { key: row.key, style: { '--i': i }, 'data-open': String(expanded) },
+                      h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-trend-model' },
+                        h('div', { className: 'mdlb-trend-model-top' },
+                          row.href
+                            ? h('a', { href: row.href, target: '_blank', rel: 'noreferrer noopener', title: row.name }, row.name)
+                            : h('span', { title: row.name }, row.name),
+                          row.boardRank !== null ? h('span', { className: 'mdlb-chip' }, t('trendsRankChip', { n: row.boardRank })) : null,
+                          row.isFree ? h('span', { className: 'mdlb-chip', 'data-tone': 'new' }, t('trendsFree')) : null,
+                        ),
+                        metaParts.length > 0 ? h('div', { className: 'mdlb-trend-sub' }, metaParts.join(' · ')) : null,
+                      )),
+                      h('td', null, h('span', { className: 'mdlb-score mdlb-main-score' },
+                        h('span', null, formatScore(row.score, 2)),
+                        h('i', { className: 'mdlb-bar mdlb-bar--sub', 'data-tone': tone(row.score) },
+                          h('i', { style: { width: percent(row.score) } })),
+                      )),
+                      h('td', null, h('div', { className: 'mdlb-cell' },
+                        h('span', { className: 'mdlb-score' },
+                          h('b', null, row.tokenShare === null ? '—' : row.tokenShare.toFixed(2) + '%'),
+                          h('i', { className: 'mdlb-bar mdlb-bar--sub' },
+                            h('i', { style: { width: row.tokenShare ? `${Math.max(3, Math.round((row.tokenShare / maxTokenShare) * 100))}%` : '0%' } })),
+                        ),
+                        row.shareNote ? h('small', null, row.shareNote) : null,
+                      )),
+                      h('td', null, row.spendShare === null
+                        ? h('span', { className: 'mdlb-muted' }, '—')
+                        : h('div', { className: 'mdlb-cell' },
+                          h('span', { className: 'mdlb-score' },
+                            h('b', null, row.spendShare.toFixed(2) + '%'),
+                            h('i', { className: 'mdlb-bar mdlb-bar--sub' },
+                              h('i', { style: { width: `${Math.max(3, Math.round((row.spendShare / maxSpendShare) * 100))}%` } })),
+                          ),
+                          row.spendNote ? h('small', null, row.spendNote) : null,
+                        )),
+                      h('td', { className: 'mdlb-left' }, h('div', { className: 'mdlb-ret-cell' },
+                        row.retentionTag || row.retentionChange
+                          ? h('div', { className: 'mdlb-ret-top' },
+                            row.retentionTag
+                              ? h('span', { className: 'mdlb-chip', 'data-tone': retentionToneAttr(row.retentionTone) }, row.retentionTag)
+                              : null,
+                            row.retentionChange ? h('span', { className: 'mdlb-ret-delta' }, row.retentionChange) : null,
+                            row.lowBase && !/观察期/.test(row.lowBase)
+                              ? h('span', { className: 'mdlb-chip', 'data-tone': 'warn' }, row.lowBase)
+                              : null,
+                          )
+                          : h('span', { className: 'mdlb-muted' }, '—'),
+                        row.stages && row.stages.length > 0
+                          ? h('div', { className: 'mdlb-ret-stages' }, row.stages.join(' → '))
+                          : null,
+                      )),
+                      h('td', null, sub
+                        ? h('div', { className: 'mdlb-cell' },
+                          sub.maxQuotaYi !== null
+                            ? h('span', { className: 'mdlb-score' },
+                              h('b', null, t('subMaxQuota', { v: formatYi(sub.maxQuotaYi) })),
+                              h('i', { className: 'mdlb-bar mdlb-bar--sub' },
+                                h('i', { style: { width: `${Math.max(4, Math.round((sub.maxQuotaYi / maxSubQuota) * 100))}%` } })),
+                            )
+                            : h('b', { className: 'mdlb-muted' }, t('quotaUnknown')),
+                          h('small', null, sub.maxQuotaYi !== null
+                            ? t('subPlanSummary', { p: sub.providerCount, n: sub.planCount, price: money(sub.minPriceUsd) })
+                            : t('subUnknownSummary', { p: sub.providerCount, n: sub.planCount })),
+                        )
+                        : h('span', { className: 'mdlb-muted' }, quotaReady ? t('subApiOnly') : t('subNotLoaded'))),
+                      h('td', { className: 'mdlb-axes-cell' }, h('button', {
+                        className: 'mdlb-axisbtn',
+                        'aria-expanded': String(expanded),
+                        title: expanded ? t('collapseDetail') : t('expandDetail'),
+                        onClick: () => setOpen(expanded ? null : row.key),
+                      },
+                      h('span', null, expanded ? t('collapseDetail') : t('expandDetail')),
+                      h('svg', {
+                        width: 9, height: 9, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+                        strokeWidth: 2.4, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
+                      }, h('path', { d: 'M6 9l6 6 6-6' })))),
+                    ),
+                    expanded
+                      ? h('tr', { key: row.key + ':detail', className: 'mdlb-detail' },
+                        h('td', { colSpan: 7, className: 'mdlb-left' },
+                          h('div', { className: 'mdlb-detail-clip' },
+                            h('div', { className: 'mdlb-detail-inner' },
+                              h('div', { className: 'mdlb-trend-detail' },
+                                h('div', { className: 'mdlb-trend-detail-head' },
+                                  h('span', { className: 'mdlb-trend-detail-title' },
+                                    sub ? t('subPlansHeading') : t('trendsStageHeading')),
+                                  sub && onInspectModel
+                                    ? h('button', {
+                                      className: 'mdlb-rowbtn',
+                                      onClick: () => onInspectModel(row.name),
+                                    }, t('subJumpModel'))
+                                    : null,
+                                ),
+                                sub
+                                  ? h('div', { className: 'mdlb-trend-plans' },
+                                    sub.plans.map(plan => h('div', { key: plan.id, className: 'mdlb-trend-plan' },
+                                      h('div', { className: 'mdlb-trend-plan-top' },
+                                        h('b', null, plan.provider + ' · ' + plan.plan),
+                                        h('span', null, money(plan.priceUsd) + ' / ' + t('perMonthUnit')),
+                                      ),
+                                      h('div', { className: 'mdlb-trend-plan-quota' },
+                                        plan.quotaKnown && plan.quota !== null
+                                          ? h('b', null, '≈ ' + formatYi(plan.quota) + ' 亿 Token/月')
+                                          : h('span', { className: 'mdlb-unknown-tag' }, t('quotaUnknown')),
+                                        plan.perDollarRaw
+                                          ? h('span', null, perUnitText(plan.perDollarRaw, currency, rate))
+                                          : null,
+                                      ),
+                                    )))
+                                  : h('span', { className: 'mdlb-note' }, t('subNoPlansDetail')),
+                              ),
+                            ),
+                          ),
+                        ))
+                      : null,
+                  ]
+                })),
+            ),
+          ),
+        ),
+      )
+    }
+
     /** One quota matrix cell: the month-normalised figure on top, API value or per-unit below. */
     function quotaCell(cell, key, { t, currency, rate, provider }) {
       const q = quotaMonthYi(cell, provider)
@@ -2315,9 +2975,11 @@ window.__ModuleLoader__.load({
     }
 
     /** Tab 4: pick one model, see every plan that carries it. */
-    function ModelTable({ entries, t, currency, onCurrency, rate }) {
+    function ModelTable({ entries, t, currency, onCurrency, rate, picked: externalPicked, onPick }) {
       const index = useMemo(() => modelIndex(entries), [entries])
-      const [picked, setPicked] = useState(null)
+      const [localPicked, setLocalPicked] = useState('')
+      const picked = onPick ? externalPicked : localPicked
+      const setPicked = onPick || setLocalPicked
       const [query, setQuery] = useState('')
       const [sort, setSort] = useState('best')
 
@@ -2976,6 +3638,7 @@ window.__ModuleLoader__.load({
 
       useHalftoneWave(rootRef, paperRef, canvasRef)
       const [modelSort, setModelSort] = useState('best')
+      const [pickedModel, setPickedModel] = useState('')
       const [currency, setCurrency] = useState('USD')
       const [provider, setProvider] = useState('*')
       const [query, setQuery] = useState('')
@@ -2984,9 +3647,26 @@ window.__ModuleLoader__.load({
       const [quota, loadQuota] = useFeed('/__modeldial/quota')
       const [writing, loadWriting] = useFeed('/__modeldial/writing')
       const [harness, loadHarness] = useFeed('/__modeldial/harness')
+      const [trends, loadTrends] = useFeed('/__modeldial/trends')
       const usesQuota = tab === 'quota' || tab === 'value' || tab === 'model' || tab === 'budget'
-      const active = tab === 'writing' ? writing : tab === 'harness' ? harness : usesQuota ? quota : board
-      const load = tab === 'writing' ? loadWriting : tab === 'harness' ? loadHarness : usesQuota ? loadQuota : loadBoard
+      const active = tab === 'writing'
+        ? writing
+        : tab === 'harness'
+          ? harness
+          : tab === 'trends'
+            ? trends
+            : usesQuota
+              ? quota
+              : board
+      const load = tab === 'writing'
+        ? loadWriting
+        : tab === 'harness'
+          ? loadHarness
+          : tab === 'trends'
+            ? loadTrends
+            : usesQuota
+              ? loadQuota
+              : loadBoard
       const payload = active.payload
       const busy = active.busy
       const fetchedAt = formatTime(payload && payload.fetchedAt)
@@ -2996,8 +3676,21 @@ window.__ModuleLoader__.load({
       const writingRows = (writingData && writingData.rows) || []
       const harnessData = (harness.payload && harness.payload.data) || null
       const harnessRows = (harnessData && harnessData.rows) || []
+      const trendsData = (trends.payload && trends.payload.data) || null
+      const trendsRawRows = (trendsData && trendsData.rows) || []
 
       const entries = useMemo(() => planModelEntries(sections), [sections])
+      const quotaByModel = useMemo(() => quotaSummaryByModel(entries), [entries])
+      const trendsRows = useMemo(() => trendsRawRows.map(row => ({
+        ...row,
+        sub: quotaByModel.get(row.name) || null,
+      })), [trendsRawRows, quotaByModel])
+      const trendsPayload = useMemo(() => trendsData ? { ...trendsData, rows: trendsRows } : null, [trendsData, trendsRows])
+
+      const inspectModelInQuota = useCallback(name => {
+        setPickedModel(name)
+        setTab('model')
+      }, [])
 
       // 刊头四个大字必须是实算的：上游目录一变（多加一家厂商、多一个套餐）就要跟着变。
       const coverage = useMemo(() => ({
@@ -3026,9 +3719,16 @@ window.__ModuleLoader__.load({
           const domains = harnessRows[0] && Array.isArray(harnessRows[0].domains) ? harnessRows[0].domains.length : 0
           return [['harness', 'kpiHarness', harnessRows.length], ['domains', 'kpiDomains', domains]]
         }
+        if (tab === 'trends') {
+          if (trendsRows.length === 0) return []
+          const dateLabel = trendsData && trendsData.updatedAt
+            ? trendsData.updatedAt.slice(5).replace('.', '/')
+            : '—'
+          return [['models', 'kpiTrendsModels', trendsRows.length], ['date', 'kpiTrendsDate', dateLabel]]
+        }
         if (coverage.providers === 0) return []
         return [['models', 'kpiModels', coverage.models], ['combos', 'kpiCombos', coverage.combos]]
-      }, [tab, boardRows, writingRows, writingData, harnessRows, coverage])
+      }, [tab, boardRows, writingRows, writingData, harnessRows, trendsRows, trendsData, coverage])
 
       const valueRows = useMemo(() => {
         const out = []
@@ -3067,7 +3767,9 @@ window.__ModuleLoader__.load({
             ? writingRows
             : tab === 'harness'
               ? harnessRows
-              : sections
+              : tab === 'trends'
+                ? trendsRows
+                : sections
         /* 标题要包一层 .mdlb-empty-title：裸文本是 13px，反而是提示的 span 吃到
            `span:first-child` 的 19px，层级是反的。新两榜另用 .mdlb-empty--board */
         const emptyCard = () => h('div', { className: 'mdlb-main' }, h('div', { className: 'mdlb-card' },
@@ -3177,12 +3879,26 @@ window.__ModuleLoader__.load({
             noMatchLabel: t('noMatchHarness'),
           })
         }
+        if (tab === 'trends') {
+          if (trendsRows.length === 0) return emptyBoardCard()
+          return h(TrendsTable, {
+            trends: trendsPayload,
+            quotaReady: sections.length > 0,
+            t,
+            query,
+            onQuery: setQuery,
+            currency,
+            onCurrency: setCurrency,
+            rate,
+            onInspectModel: inspectModelInQuota,
+          })
+        }
         if (tab === 'model') {
           if (sections.length === 0) {
             return h('div', { className: 'mdlb-main' }, h('div', { className: 'mdlb-card' },
               h('div', { className: 'mdlb-empty' }, t('empty'), h('span', null, t('emptyHint')))))
           }
-          return h(ModelTable, { entries, t, currency, onCurrency: setCurrency, rate })
+          return h(ModelTable, { entries, t, currency, onCurrency: setCurrency, rate, picked: pickedModel, onPick: setPickedModel })
         }
         if (tab === 'budget') {
           if (sections.length === 0) {
@@ -3203,7 +3919,7 @@ window.__ModuleLoader__.load({
             h('div', { className: 'mdlb-empty' }, t('empty'), h('span', null, t('emptyHint')))))
         }
         return h(QuotaTable, { sections, t, currency, onCurrency: setCurrency, rate })
-      }, [active.loading, payload, tab, t, query, boardRows, writingRows, harnessRows, sections, valueRows, entries, currency, provider, rate])
+      }, [active.loading, payload, tab, t, query, boardRows, writingRows, harnessRows, trendsRows, trendsPayload, sections, valueRows, entries, currency, provider, rate, pickedModel, inspectModelInQuota])
 
       return h('div', { className: 'mdlb-root', ref: rootRef },
         h('style', { key: 'mdlb-style' }, CSS),
@@ -3228,13 +3944,15 @@ window.__ModuleLoader__.load({
                 ? t('writingSub')
                 : tab === 'harness'
                   ? t('harnessSub')
-                  : tab === 'quota'
-                    ? t('quotaSub')
-                    : tab === 'model'
-                      ? t('modelSub')
-                      : tab === 'budget'
-                        ? t('budgetSub')
-                        : t(currency === 'CNY' ? 'valueSubCny' : 'valueSub')),
+                  : tab === 'trends'
+                    ? t('trendsSub')
+                    : tab === 'quota'
+                      ? t('quotaSub')
+                      : tab === 'model'
+                        ? t('modelSub')
+                        : tab === 'budget'
+                          ? t('budgetSub')
+                          : t(currency === 'CNY' ? 'valueSubCny' : 'valueSub')),
           ),
           h('div', { className: 'mdlb-actions' },
             fetchedAt ? h('span', { className: 'mdlb-time', 'data-stale': String(!active.error ? false : true) },
@@ -3260,6 +3978,7 @@ window.__ModuleLoader__.load({
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'board'), onClick: () => setTab('board') }, t('tabBoard')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'writing'), onClick: () => setTab('writing') }, t('tabWriting')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'harness'), onClick: () => setTab('harness') }, t('tabHarness')),
+          h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'trends'), onClick: () => setTab('trends') }, t('tabTrends')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'quota'), onClick: () => setTab('quota') }, t('tabQuota')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'value'), onClick: () => setTab('value') }, t('tabValue')),
           h('button', { className: 'mdlb-tab', 'data-active': String(tab === 'model'), onClick: () => setTab('model') }, t('tabModel')),

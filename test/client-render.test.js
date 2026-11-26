@@ -29,11 +29,13 @@ const feeds = (() => {
   const quota = __test.parseQuota(fixture('quota.html'))
   const writing = __test.parseWriting(JSON.parse(fixture('writing.json')))
   const harness = __test.parseHarness(fixture('harness.html'))
+  const trends = __test.parseTrends(fixture('trends.html'))
   return [
     { loading: false, busy: false, payload: { ok: true, data: leaderboard }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: quota }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: writing }, error: null },
     { loading: false, busy: false, payload: { ok: true, data: harness }, error: null },
+    { loading: false, busy: false, payload: { ok: true, data: trends }, error: null },
   ]
 })()
 
@@ -148,7 +150,7 @@ function findAll(node, predicate, out = []) {
 }
 
 test('every tab of the page renders without throwing', () => {
-  const tabs = ['board', 'writing', 'harness', 'quota', 'value', 'model', 'budget']
+  const tabs = ['board', 'writing', 'harness', 'trends', 'quota', 'value', 'model', 'budget']
   for (const tab of tabs) {
     assert.doesNotThrow(() => renderTab(tab), `tab ${tab} should render`)
   }
@@ -182,6 +184,23 @@ test('quota-driven tabs keep working', () => {
   assert.match(renderTab('value'), /perUnit|colPerDollar|价值|valueSub|tabValue/)
   assert.match(renderTab('model'), /tabModel/)
   assert.match(renderTab('budget'), /tabBudget/)
+})
+
+test('the trends tab renders vendor bars, retention, subscription quota summary, and expandable details', () => {
+  const text = renderTab('trends')
+  assert.match(text, /Claude Fable 5\.2/)
+  assert.match(text, /Anthropic/)
+  assert.match(text, /DeepSeek/)
+  assert.match(text, /40\.9%/)
+  assert.match(text, /subMaxQuota/)
+  assert.match(text, /subPlanSummary/)
+  assert.match(text, /trendsSub/)
+
+  const openTree = renderTabTree('trends', 'claude-opus-5-5')
+  const clips = findAll(openTree, n => n.props?.className === 'mdlb-detail-clip')
+  assert.equal(clips.length, 1)
+  const plans = findAll(clips[0], n => n.props?.className === 'mdlb-trend-plan')
+  assert.ok(plans.length >= 1, 'expanded subscribable model should list subscription plans with monthly token quotas')
 })
 
 test('halftone canvas, refresh busy state, and readable CSS rules are wired', () => {
